@@ -8,7 +8,7 @@ The code for CS427 Android app.
 | Name                 | NetID         | GitHub ID   | Role          |                Experience                  |
 | ---------------------| ------------- | ------------| ------------- |------------------------------------------- |
 |        Zhen Bi       |    zhenbi2    |   zhenbi93  |    Manager    |           C++, Python, JavaScript          |      
-|       Aaron Lee      |               |  aaron68lee |   Developer   |                SQL, Python                 |
+|       Aaron Lee      |    aaroncl2   |  aaron68lee |   Developer   |                SQL, Python                 |
 | Niranjan Kalaiselvan |     nk46      |  nk46-cloud |   Developer   |                   Java                     |
 |    Sabelle Huang     |    sabelle2   |   sabelle   |   Developer   |        Python, Java, JavaScript, XML       |
 |     Divey Anand      |    thivaey    |   diveya2   |   Tech Lead   |             Python, JavaScript             |
