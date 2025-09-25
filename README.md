@@ -7,14 +7,14 @@ The code for CS427 Android app.
 <br/>
 | Name                 | NetID         | GitHub ID   | Role          |                Experience                  |
 | ---------------------| ------------- | ------------| ------------- |------------------------------------------- |
-|        Zhen Bi       |    zhenbi2    |   zhenbi93  |   Developer   |           C++, Python, JavaScript          |      
-|       Aaron Lee      |  aaron68lee   |  aaron68lee |   Developer   |                SQL, Python                 |
-| Niranjan Kalaiselvan |               |  nk46-cloud |   Developer   |                   Java                     |
-|    Sabelle Huang     |    sabelle2   |   sabelle   |   Developer   |React Native, React, JS, Android Studio, XML|
-|     Divey Anand      |    thivaey    |   diveya2   |   Developer   |             Python, Javascript             |
-|   Aryaman Nasare     |               |             |   Developer   |               |
-|  Satej Sukthankar    |               |             |   Developer   |               |
-|      Yuang Cai       |               |             |   Developer   |               |
+|        Zhen Bi       |    zhenbi2    |   zhenbi93  |    Manager    |           C++, Python, JavaScript          |      
+|       Aaron Lee      |               |  aaron68lee |   Developer   |                SQL, Python                 |
+| Niranjan Kalaiselvan |     nk46      |  nk46-cloud |   Developer   |                   Java                     |
+|    Sabelle Huang     |    sabelle2   |   sabelle   |   Developer   |        Python, Java, JavaScript, XML       |
+|     Divey Anand      |    thivaey    |   diveya2   |   Tech Lead   |             Python, JavaScript             |
+|   Aryaman Nasare     |    nasare2    |   aryabro   |   Developer   |              Web Development               |
+|  Satej Sukthankar    |    satejrs2   |   satej006  |   Developer   |          Python, Java, JavaScript          |
+|      Yuang Cai       |    yuangc3    |   yuangc3   |   Developer   |     Python, C/C++, JavaScript, HTML/CSS    |
 <br/>
 
 
