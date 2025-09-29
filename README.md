@@ -11,7 +11,7 @@ The code for CS427 Android app.
 |       Aaron Lee      |    aaroncl2   |  aaron68lee |   Developer   |                SQL, Python                 |
 | Niranjan Kalaiselvan |     nk46      |  nk46-cloud |   Developer   |                   Java                     |
 |    Sabelle Huang     |    sabelle2   |   sabelle   |   Developer   |        Python, Java, JavaScript, XML       |
-|     Divey Anand      |    thivaey    |   diveya2   |   Tech Lead   |             Python, JavaScript             |
+|     Divey Anand      |    diveya2    |   thivaey   |   Tech Lead   |             Python, JavaScript             |
 |   Aryaman Nasare     |    nasare2    |   aryabro   |   Developer   |              Web Development               |
 |  Satej Sukthankar    |    satejrs2   |   satej006  |   Developer   |          Python, Java, JavaScript          |
 |      Yuang Cai       |    yuangc3    |   yuangc3   |   Developer   |     Python, C/C++, JavaScript, HTML/CSS    |
