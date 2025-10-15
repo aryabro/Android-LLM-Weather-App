@@ -60,29 +60,26 @@ To Do:
 - We will use 10/11 to review/ make last minute changes
 - Zhen Bi will submit doc 10/12
 
-
 <b>Project Week 3</b>
 </br>
 Members present: zhenbi2, aaroncl2, nk46, sabelle2, diveya2, nasare2, satejrs2, yuangc3
 </br>
-Meeting Notes:
-- Distributed tasks for Iteration 3 of project 
-- Everyone finished parts 1 & 2 of this iteration
-- [Iteration 3 Notes Document](https://docs.google.com/document/d/1BxIeHIgbxuBp_N-n1q6EKJgVvrJgsSwxF4kwfXDPQBg/edit?usp=sharing)
-  To Do:
-- Add necessary  Android Components for each class for user login, auth, LLM UI
-- Each person/group will finish their class/component definitions by 10/28
+Meeting notes: 
+distributed tasks for iteration 3. everyone finished parts 1& 2 of this iteration
+[Iteration 3 Notes Document](https://docs.google.com/document/d/1BxIeHIgbxuBp_N-n1q6EKJgVvrJgsSwxF4kwfXDPQBg/edit?usp=sharing)
 </br>
-| NetID          | Progress from last week         |                   Tasks for next week                     |
-| ---------------| --------------------------------| ----------------------------------------------------------|
-| zhenbi2        | see Iteration 2                 | Implementation progress for add new city to location list |
-| aaroncl2       | see Iteration 2                 | Implementation progress LLM UI Customization              |                     
-| sabelle2       | see Iteration 2                 | Implementation progress for add new city to location list |                   
-| diveya2        | see Iteration 2                 | Implementation progress user auth and login               |                     
-| nasare2        | see Iteration 2                 | Implementation progress LLM UI Customization              |                    
-| satejrs2       | see Iteration 2                 | Implementation progress user auth and login               |                     
-| yuangc3        | see Iteration 2                 | Implementation progress for add new city to location list |                     
-| nk46           | see Iteration 2                 | Implementation progress LLM UI Customization              |
+To Do: Add necessary  Android Components for each class for user login, auth, LLM UI. Each person/group will finish their class/component definitions by 10/28
+</br>
+| NetID          | Progress from last week         | Tasks for next week   |
+| ---------------| --------------------------------| ----------------------|
+|  zhenbi2              |       see iteration 2                          |    implementation progress for add new city to loc list                   |
+|  aaroncl2              |      see iteration 2                            |    implementation progress llm ui customization                    |
+|  sabelle2              |      see iteration 2                            |   implementation progress for add new city to loc list                    |
+|  diveya2              |       see iteration 2                           |    implementation progress user auth/login                    |
+|  nasare2              |       see iteration 2                           |   implementation progress llm ui customization                     |
+|  satejrs2              |      see iteration 2                            |   implementation progress user auth/login                      |
+|  yuangc3              |       see iteration 2                           |    implementation progress for add new city to loc list                   |
+|  nk46              |          see iteration 2                        |   implementation progress llm ui customization                    |
 </br>
 
 
