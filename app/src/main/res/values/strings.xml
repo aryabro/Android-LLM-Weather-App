@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Team #417</string>
+    <string name="sign_in_title">Sign In</string>
+    <string name="username_hint">Username or Email</string>
+    <string name="password_hint">Password</string>
+    <string name="sign_in_hint">Sign In</string>
+    <string name="create_account_hint">Create an account</string>
 </resources>
