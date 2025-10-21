@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">Team #417</string>
+    <string name="app_name">CS427App</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="theme_description">Describe your desired theme</string>
+    <string name="sign_in">Sign In</string>
 </resources>
