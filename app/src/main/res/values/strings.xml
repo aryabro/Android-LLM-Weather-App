@@ -5,6 +5,7 @@
     <string name="password_hint">Password</string>
     <string name="sign_in_hint">Sign In</string>
     <string name="create_account_hint">Create an account</string>
+    <string name="theme_hint">Describe your desired theme</string>    
     <string name="app_name">CS427App</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
