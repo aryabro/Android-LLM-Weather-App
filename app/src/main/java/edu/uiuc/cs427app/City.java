@@ -1,6 +1,7 @@
 package edu.uiuc.cs427app;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "cities")
@@ -15,6 +16,7 @@ public class City {
     @PrimaryKey
     private int id;
 
+    @Ignore
     public City() {}
 
     public City(String city, String city_ascii, String country,

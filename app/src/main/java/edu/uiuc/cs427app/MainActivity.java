@@ -39,8 +39,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ActivityMainBinding binding;
     private LinearLayout locationContainer;
     private ArrayList<String> cityList;
-    private SharedPreferences sharedPreferences;
-    private static final String PREFS_NAME = "CityListPrefs";
     private static final String ACCOUNT_CITIES_KEY = "cities"; // stored in AccountManager userData
     private android.app.ProgressDialog progressDialog;
     private volatile boolean importAttempted = false;
@@ -322,12 +320,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             accountManager.setUserData(account, ACCOUNT_CITIES_KEY, joined);
         } else {
             // Fallback to SharedPreferences if account is unavailable
-            if (sharedPreferences != null) {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                Set<String> citySet = new HashSet<>(cityList);
-                editor.putStringSet(CITIES_KEY, citySet);
-                editor.apply();
-            }
+
         }
     }
 
@@ -338,18 +331,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (stored != null && !stored.isEmpty()) {
                 String[] cities = TextUtils.split(stored, ",");
                 for (String c : cities) {
-                    String name = c == null ? null : c.trim();
-                    if (name != null && !name.isEmpty()) {
-                        cityList.add(name);
-                        addCityToUI(name);
-                    }
-                }
-            }
-        } else if (sharedPreferences != null) {
-            // Fallback to SharedPreferences
-            Set<String> set = sharedPreferences.getStringSet(CITIES_KEY, new HashSet<>());
-            if (set != null) {
-                for (String c : set) {
                     String name = c == null ? null : c.trim();
                     if (name != null && !name.isEmpty()) {
                         cityList.add(name);
@@ -438,6 +419,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Ensure city list is initialized before any usage
+        cityList = new ArrayList<>();
 
         accountManager = AccountManager.get(this);
         String username = getIntent().getStringExtra("username");
