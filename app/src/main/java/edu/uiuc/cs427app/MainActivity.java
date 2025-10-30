@@ -6,21 +6,24 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.os.Handler;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.navigation.ui.AppBarConfiguration;
 
 import edu.uiuc.cs427app.databinding.ActivityMainBinding;
+import edu.uiuc.cs427app.AppDatabase;
+import edu.uiuc.cs427app.City;
+import edu.uiuc.cs427app.CityDao;
+import edu.uiuc.cs427app.DatabaseClient;
 
-import android.widget.Button;
-
-import android.widget.LinearLayout;
-
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,9 +39,78 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String PREFS_NAME = "CityListPrefs";
     private static final String CITIES_KEY = "cities";
     private android.app.ProgressDialog progressDialog;
+    private volatile boolean importAttempted = false;
 
-    
-// this function basically will show the tab/dialogue once a user click the "Add City" button
+    private void importCitiesFromCSV() {
+        new Thread(() -> {
+            try {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(getAssets().open("worldcities.csv")));
+                List<City> cities = new ArrayList<>();
+                String line;
+                reader.readLine(); // 跳过 header
+                while ((line = reader.readLine()) != null) {
+                    List<String> parts = parseCsvLine(line);
+                    if (parts.size() < 7) {
+                        continue;
+                    }
+                    // schema: city, city_ascii, country, iso2, iso3, admin_name, id
+                    String city = parts.get(0).trim();
+                    String city_ascii = parts.get(1).trim();
+                    String country = parts.get(2).trim();
+                    String iso2 = parts.get(3).trim();
+                    String iso3 = parts.get(4).trim();
+                    String admin_name = parts.get(5).trim();
+                    int id;
+                    try {
+                        id = Integer.parseInt(parts.get(6).trim());
+                    } catch (NumberFormatException nfe) {
+                        continue;
+                    }
+
+                    cities.add(new City(city, city_ascii, country, iso2, iso3, admin_name, id));
+
+                    if (cities.size() >= 500) {
+                        DatabaseClient.getInstance(this).getAppDatabase()
+                                .cityDao().insertAll(cities);
+                        cities.clear();
+                    }
+                }
+                if (!cities.isEmpty()) {
+                    DatabaseClient.getInstance(this).getAppDatabase()
+                            .cityDao().insertAll(cities);
+                }
+                reader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private List<String> parseCsvLine(String line) {
+        List<String> result = new ArrayList<>();
+        if (line == null) {
+            return result;
+        }
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                result.add(current.toString());
+                current.setLength(0);
+            } else {
+                current.append(c);
+            }
+        }
+        result.add(current.toString());
+        return result;
+    }
+
+    // this function basically will show the tab/dialogue once a user click the "Add
+    // City" button
     private void showAddLocationDialog() {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("Add a New City");
@@ -46,28 +118,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         input.setHint("Enter city name");
         builder.setView(input);
         builder.setPositiveButton("Add", (dialog, which) -> {
-            String cityName = input.getText().toString().trim();
-            if (!cityName.isEmpty()) {
-                // Basic input validation
-                if (cityName.length() < 2) {
-                    showInputErrorDialog("City name must be at least 2 characters long!");
-                } else if (cityName.length() > 100) {
-                    showInputErrorDialog("City name is too long! Please keep it under 100 characters.");
-                } else if (isCityAlreadyInList(cityName)) {
-                    showInputErrorDialog("This city already exists in your list!");
-                } else if (containsNumbers(cityName)) {
-                    showInputErrorDialog("City names should not contain numbers. Please enter a valid city name.");
-                } else {
-                    validateAndAddCity(cityName);
-                }
-            } else {
+            CharSequence text = input.getText();
+            String cityName = text == null ? null : text.toString();
+            if (cityName != null) {
+                cityName = cityName.trim();
+            }
+
+            if (cityName == null || cityName.isEmpty()) {
                 showInputErrorDialog("Please enter a city name!");
+                return;
+            }
+
+            // Basic input validation
+            if (isCityAlreadyInList(cityName)) {
+                showInputErrorDialog("This city already exists in your list!");
+            } else if (containsNumbers(cityName)) {
+                showInputErrorDialog("City names should not contain numbers. Please enter a valid city name.");
+            } else {
+                validateAndAddCity(cityName);
             }
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
-// This function will show the error message once user writes the wrong message input 
+
+    // This function will show the error message once user writes the wrong message
+    // input
     private void showInputErrorDialog(String message) {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("⚠️ Input Error");
@@ -81,27 +157,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setIcon(android.R.drawable.ic_dialog_alert);
         builder.show();
     }
-    //it tests if the input has integers
+
+    // it tests if the input has integers
     private boolean containsNumbers(String text) {
         return text.matches(".*\\d.*");
     }
-//it tests if the city is already existed in the list
-    private boolean isCityAlreadyInList(String cityName) {
-        // Get the normalized version of the input city name
-        String normalizedInput = LocalCityValidator.getNormalizedCityName(cityName);
-        if (normalizedInput == null) {
-            return false; // If it's not a valid city, it can't be a duplicate
-        }
+    // it tests if the city is already existed in the list
 
-        // Check if any city in the list matches the normalized input
+    private boolean isCityAlreadyInList(String cityName) {
+        if (cityName == null) {
+            return false;
+        }
+        String normalizedInput = cityName.trim().toLowerCase();
         for (String existingCity : cityList) {
-            if (existingCity.equals(normalizedInput)) {
+            if (existingCity != null && existingCity.toLowerCase().equals(normalizedInput)) {
                 return true;
             }
         }
         return false;
     }
-// it validate the city before writing to the city list. Otherwise, it shows error message
+
+    // it validate the city before writing to the city list. Otherwise, it shows
+    // error message
     private void validateAndAddCity(String cityName) {
         // Show progress dialog
         progressDialog = new android.app.ProgressDialog(this);
@@ -109,28 +186,78 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        // Simulate a brief validation delay for better UX
-        new android.os.Handler().postDelayed(() -> {
-            // Dismiss progress dialog
-            if (progressDialog != null && progressDialog.isShowing()) {
-                progressDialog.dismiss();
-            }
+        new Thread(() -> {
+            try {
+                CityDao dao = DatabaseClient.getInstance(this)
+                        .getAppDatabase()
+                        .cityDao();
 
-            // Validate city using the LocalCityValidator
-            boolean isValid = LocalCityValidator.isValidCity(cityName);
-            String message = LocalCityValidator.getValidationMessage(cityName);
+                int total = dao.countCities();
+                // If database is empty, try to (re)trigger import and wait briefly
+                if (total == 0) {
+                    if (!importAttempted) {
+                        importAttempted = true;
+                        importCitiesFromCSV();
+                    }
+                    // Poll a few times up to ~2 seconds for import to fill DB
+                    int attempts = 0;
+                    while (attempts < 10) {
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException ignored) {
+                        }
+                        total = dao.countCities();
+                        if (total > 0)
+                            break;
+                        attempts++;
+                    }
+                    if (total == 0) {
+                        runOnUiThread(() -> {
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                            showInputErrorDialog("Initializing city database, please try again in a moment.");
+                        });
+                        return;
+                    }
+                }
 
-            if (isValid) {
-                // Get the normalized city name to store in the list
-                String normalizedCityName = LocalCityValidator.getNormalizedCityName(cityName);
-                addCityToList(normalizedCityName);
-                showSuccessDialog(normalizedCityName);
-            } else {
-                showErrorDialog(cityName, message);
+                List<City> matchedCities = dao.findAllByName(cityName);
+
+                runOnUiThread(() -> {
+                    if (progressDialog != null && progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+
+                    if (matchedCities == null || matchedCities.isEmpty()) {
+                        showInputErrorDialog("This may be not a valid city in the real world.");
+                    } else if (matchedCities.size() == 1) {
+                        City city = matchedCities.get(0);
+                        addCityToList(city.getCity());
+                        showSuccessDialog(city.getCity());
+                    } else {
+                        showCityChoiceDialog(matchedCities);
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    if (progressDialog != null && progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    showInputErrorDialog("Unexpected error during validation. Please try again.");
+                });
             }
-        }, 500); // 500ms delay to show the progress dialog
+        }).start();
     }
-// if user successfully add a city to the list, it will have a success dialog message
+
+    private List<City> findMatchingCities(String cityName) {
+        // Deprecated by background-threaded DAO queries; keep method for compatibility
+        // if needed
+        return new ArrayList<>();
+    }
+
+    // if user successfully add a city to the list, it will have a success dialog
+    // message
     private void showSuccessDialog(String cityName) {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("✅ City Added Successfully!");
@@ -139,41 +266,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setIcon(android.R.drawable.ic_dialog_info);
         builder.show();
     }
-// if user fails to add a city, it will have a error message 
-    private void showErrorDialog(String cityName, String errorMessage) {
+
+    private void showCityChoiceDialog(List<City> cities) {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("❌ City Not Found");
-        builder.setMessage(errorMessage);
-
-        // Get suggestions for similar cities
-        List<String> suggestions = LocalCityValidator.getSimilarCities(cityName, 3);
-
-        if (!suggestions.isEmpty()) {
-            builder.setMessage(errorMessage + "\n\nWould you like to add one of these cities instead?");
-
-            // Create buttons for each suggestion
-            for (String suggestion : suggestions) {
-                builder.setNeutralButton(suggestion, (dialog, which) -> {
-                    // Use the normalized city name from the suggestion
-                    String normalizedSuggestion = LocalCityValidator.getNormalizedCityName(suggestion);
-                    if (normalizedSuggestion != null) {
-                        addCityToList(normalizedSuggestion);
-                        showSuccessDialog(normalizedSuggestion);
-                    }
-                });
-            }
+        builder.setTitle("Multiple Cities Found");
+        String[] options = new String[cities.size()];
+        for (int i = 0; i < cities.size(); i++) {
+            City c = cities.get(i);
+            options[i] = c.getCity() + ", " + c.getCountry();
         }
-
-        builder.setPositiveButton("Try Again", (dialog, which) -> {
-            // Reopen the add city dialog
-            showAddLocationDialog();
+        builder.setItems(options, (dialog, which) -> {
+            City selectedCity = cities.get(which);
+            addCityToList(selectedCity.getCity());
+            showSuccessDialog(selectedCity.getCity());
         });
-
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.setIcon(android.R.drawable.ic_dialog_alert);
         builder.show();
     }
-// it add the city ot the list 
+
+    // it add the city ot the list
     private void addCityToList(String cityName) {
         // Add to city list
         cityList.add(cityName);
@@ -184,7 +295,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Save to preferences
         saveCityList();
     }
-// it removes the selected city from the list
+
+    // it removes the selected city from the list
     private void removeCityFromList(String cityName, LinearLayout row) {
         // Remove from city list
         cityList.remove(cityName);
@@ -195,16 +307,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Save to preferences
         saveCityList();
     }
-//It saves your current list of cities to persistent storage
+
+    // It saves your current list of cities to persistent storage
     private void saveCityList() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Set<String> citySet = new HashSet<>(cityList);
         editor.putStringSet(CITIES_KEY, citySet);
         editor.apply();
     }
-// Loads the saved list of cities from SharedPreferences and restores it into memory.
-//If no cities were previously saved, initializes an empty list.
-//After loading, the method rebuilds the UI by adding each stored city back to the view.
+
+    // Loads the saved list of cities from SharedPreferences and restores it into
+    // memory.
+    // If no cities were previously saved, initializes an empty list.
+    // After loading, the method rebuilds the UI by adding each stored city back to
+    // the view.
     private void loadCityList() {
         Set<String> citySet = sharedPreferences.getStringSet(CITIES_KEY, new HashSet<>());
         cityList = new ArrayList<>(citySet);
@@ -233,19 +349,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         shape.setCornerRadius(
                 TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_DIP, 100,
-                        getResources().getDisplayMetrics())
-        );
+                        getResources().getDisplayMetrics()));
         shape.setColor(ContextCompat.getColor(this, android.R.color.darker_gray));
         int padding = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 4,
-                getResources().getDisplayMetrics()
-        );
+                getResources().getDisplayMetrics());
 
         int marginHorizontal = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 2,
-                getResources().getDisplayMetrics()
-        );
-
+                getResources().getDisplayMetrics());
 
         // Details button
         Button detailsButton = new Button(this);
@@ -256,8 +368,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         LinearLayout.LayoutParams detailsParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+                LinearLayout.LayoutParams.WRAP_CONTENT);
         detailsParams.setMargins(marginHorizontal, 0, marginHorizontal, 0);
         detailsButton.setLayoutParams(detailsParams);
         detailsButton.setLayoutParams(detailsParams);
@@ -281,8 +392,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         LinearLayout.LayoutParams removeParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+                LinearLayout.LayoutParams.WRAP_CONTENT);
         removeParams.setMargins(marginHorizontal, 0, marginHorizontal, 0);
         removeButton.setLayoutParams(removeParams);
         removeButton.setLayoutParams(removeParams);
@@ -300,17 +410,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize SharedPreferences and city list
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         cityList = new ArrayList<>();
 
-        // Initializing the UI components
         locationContainer = findViewById(R.id.locationContainer);
         Button buttonNew = findViewById(R.id.buttonAddLocation);
-
         buttonNew.setOnClickListener(this);
 
-        // Load saved cities
+        importCitiesFromCSV();
+        importAttempted = true;
         loadCityList();
     }
 
