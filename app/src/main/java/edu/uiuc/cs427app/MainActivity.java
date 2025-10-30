@@ -1,16 +1,19 @@
 package edu.uiuc.cs427app;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.text.TextUtils;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -28,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -37,9 +41,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<String> cityList;
     private SharedPreferences sharedPreferences;
     private static final String PREFS_NAME = "CityListPrefs";
-    private static final String CITIES_KEY = "cities";
+    private static final String ACCOUNT_CITIES_KEY = "cities"; // stored in AccountManager userData
     private android.app.ProgressDialog progressDialog;
     private volatile boolean importAttempted = false;
+    private AccountManager accountManager;
+    private Account account;
 
     private void importCitiesFromCSV() {
         new Thread(() -> {
@@ -310,24 +316,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // It saves your current list of cities to persistent storage
     private void saveCityList() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Set<String> citySet = new HashSet<>(cityList);
-        editor.putStringSet(CITIES_KEY, citySet);
-        editor.apply();
+        // Persist the city list to the current account so each user has their own list
+        if (account != null && accountManager != null) {
+            String joined = TextUtils.join(",", cityList);
+            accountManager.setUserData(account, ACCOUNT_CITIES_KEY, joined);
+        } else {
+            // Fallback to SharedPreferences if account is unavailable
+            if (sharedPreferences != null) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                Set<String> citySet = new HashSet<>(cityList);
+                editor.putStringSet(CITIES_KEY, citySet);
+                editor.apply();
+            }
+        }
     }
 
-    // Loads the saved list of cities from SharedPreferences and restores it into
-    // memory.
-    // If no cities were previously saved, initializes an empty list.
-    // After loading, the method rebuilds the UI by adding each stored city back to
-    // the view.
-    private void loadCityList() {
-        Set<String> citySet = sharedPreferences.getStringSet(CITIES_KEY, new HashSet<>());
-        cityList = new ArrayList<>(citySet);
-
-        // Rebuild UI with loaded cities
-        for (String cityName : cityList) {
-            addCityToUI(cityName);
+    private void loadCityListFromAccount() {
+        cityList.clear();
+        if (account != null && accountManager != null) {
+            String stored = accountManager.getUserData(account, ACCOUNT_CITIES_KEY);
+            if (stored != null && !stored.isEmpty()) {
+                String[] cities = TextUtils.split(stored, ",");
+                for (String c : cities) {
+                    String name = c == null ? null : c.trim();
+                    if (name != null && !name.isEmpty()) {
+                        cityList.add(name);
+                        addCityToUI(name);
+                    }
+                }
+            }
+        } else if (sharedPreferences != null) {
+            // Fallback to SharedPreferences
+            Set<String> set = sharedPreferences.getStringSet(CITIES_KEY, new HashSet<>());
+            if (set != null) {
+                for (String c : set) {
+                    String name = c == null ? null : c.trim();
+                    if (name != null && !name.isEmpty()) {
+                        cityList.add(name);
+                        addCityToUI(name);
+                    }
+                }
+            }
         }
     }
 
@@ -410,22 +439,57 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        cityList = new ArrayList<>();
+        accountManager = AccountManager.get(this);
+        String username = getIntent().getStringExtra("username");
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Team #417 - " + username);
+        }
+
+        Account[] accounts = accountManager.getAccountsByType(LoginActivity.ACCOUNT_TYPE);
+        for (Account acc : accounts) {
+            if (acc.name.equals(username)) {
+                account = acc;
+                break;
+            }
+        }
 
         locationContainer = findViewById(R.id.locationContainer);
         Button buttonNew = findViewById(R.id.buttonAddLocation);
+        Button buttonLogout = findViewById(R.id.buttonLogout);
+
         buttonNew.setOnClickListener(this);
+        buttonLogout.setOnClickListener(this);
 
         importCitiesFromCSV();
         importAttempted = true;
-        loadCityList();
+
+        String passedCityList = getIntent().getStringExtra(LoginActivity.KEY_CITY_LIST);
+        if (passedCityList != null && !passedCityList.isEmpty()) {
+            String[] cities = TextUtils.split(passedCityList, ",");
+            for (String city : cities) {
+                String name = city == null ? null : city.trim();
+                if (name != null && !name.isEmpty()) {
+                    cityList.add(name);
+                    addCityToUI(name);
+                }
+            }
+            // Ensure the passed list is saved to the current account
+            saveCityList();
+        } else {
+            // Load from account storage when nothing is passed from LoginActivity
+            loadCityListFromAccount();
+        }
     }
 
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.buttonAddLocation) {
             showAddLocationDialog();
+        } else if (view.getId() == R.id.buttonLogout) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
         }
     }
 
