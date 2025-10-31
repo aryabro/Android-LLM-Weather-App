@@ -113,6 +113,7 @@ Llm project
 
 <b>Project Week 5</b>
 </br>
+10/28 meeting
 Members present: zhenbi2, aaroncl2, nk46, sabelle2, diveya2, nasare2, satejrs2, yuangc3
 </br>
 Meeting notes: We discussed progress on both projects and scheduled the next meeting.
@@ -133,6 +134,10 @@ We're currently passing 18 tests from the verified-40 set. Sabelle pushed a fix 
 
 *Tasks for next week*:
 - The team will continue to work on their tools this week.
+
+10/31 meeting (demo recording)
+Members present: zhenbi2, nk46, sabelle2, diveya2, nasare2, satejrs2, yuangc3
+Meeting notes: The team met to record the demo for iteration 3.
 
 <b>Project Week 6</b>
 </br>
