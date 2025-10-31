@@ -45,7 +45,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private AccountManager accountManager;
     private Account account;
     private String username; // Current logged-in username required for theme
-
+    //this is the function for extracting all the cities in the world
     private void importCitiesFromCSV() {
         new Thread(() -> {
             try {
@@ -91,7 +91,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             }
         }).start();
     }
-
+    //Parse the CSV file and extract the city name 
     private List<String> parseCsvLine(String line) {
         List<String> result = new ArrayList<>();
         if (line == null) {
@@ -271,7 +271,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         builder.setIcon(android.R.drawable.ic_dialog_info);
         builder.show();
     }
-
+    //this shows the city list once user writes a city name 
+    // there would be many places that share the same city name
     private void showCityChoiceDialog(List<City> cities) {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("Multiple Cities Found");
@@ -324,7 +325,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         }
     }
-
+// Loads the user's saved city list from either their account storage (AccountManager)
+// It updates the local cityList and dynamically
+// adds each city to the UI.
     private void loadCityListFromAccount() {
         cityList.clear();
         if (account != null && accountManager != null) {
@@ -341,7 +344,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             }
         }
     }
-
+// Dynamically add a city entry (name + Details + Remove buttons) to the UI
     private void addCityToUI(String cityName) {
         // Create row layout
         LinearLayout row = new LinearLayout(this);
@@ -431,7 +434,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         row.addView(removeButton);
         locationContainer.addView(row);
     }
-
+// Initialize the activity, load user data, and set up buttons
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -481,7 +484,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             loadCityListFromAccount();
         }
     }
-
+// Handle button clicks for Add Location and Logout
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.buttonAddLocation) {
@@ -493,7 +496,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             finish();
         }
     }
-
+// Clean up resources when the activity is destroyed
     @Override
     protected void onDestroy() {
         super.onDestroy();
