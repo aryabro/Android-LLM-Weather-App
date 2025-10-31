@@ -1,7 +1,7 @@
 package edu.uiuc.cs427app;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
+//import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -28,7 +29,6 @@ import java.util.concurrent.Executors;
 
 public class LoginActivity extends AppCompatActivity {
 
-//    private static final String TAG = "GeminiAPI";
     public static final String ACCOUNT_TYPE = "edu.uiuc.cs427app";
     public static final String AUTH_TOKEN_TYPE = "full_access";
     public static final String KEY_CITY_LIST = "cityList";
@@ -39,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     private AccountManager accountManager;
     private EditText usernameEditText, passwordEditText, themeDescriptionEditText;
     private Button loginButton, signUpButton;
-    private ConstraintLayout loginLayout;
+//    private ConstraintLayout loginLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
         themeDescriptionEditText = findViewById(R.id.theme_description);
         loginButton = findViewById(R.id.login);
         signUpButton = findViewById(R.id.CreateAccountButton);
-        loginLayout = findViewById(R.id.login_layout);
+//        loginLayout = findViewById(R.id.login_layout);
 
         loginButton.setOnClickListener(v -> signIn());
         signUpButton.setOnClickListener(v -> signUp());
@@ -66,35 +66,48 @@ public class LoginActivity extends AppCompatActivity {
         Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
         for (Account account : accounts) {
             if (account.name.equals(username) && accountManager.getPassword(account).equals(password)) {
-                String themeDescription = accountManager.getUserData(account, "theme_description");
+//                String themeDescription = accountManager.getUserData(account, "theme_description");
                 String cityList = accountManager.getUserData(account, KEY_CITY_LIST);
-                String backgroundColor = accountManager.getUserData(account, KEY_BACKGROUND_COLOR);
-                String textColor = accountManager.getUserData(account, KEY_TEXT_COLOR);
+                String newThemeDescriptionFromUI = themeDescriptionEditText.getText().toString();
 
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.putExtra("username", username);
                 intent.putExtra(KEY_CITY_LIST, cityList);
 
-//              Pass the colors in the intent for immediate use. This will never be null anyways
-//              as the default value should be applied if LLM fails during account creation.
-//                if (backgroundColor != null && textColor != null) {
-//                    intent.putExtra(KEY_BACKGROUND_COLOR, backgroundColor);
-//                    intent.putExtra(KEY_TEXT_COLOR, textColor);
-//                }
+                if (!newThemeDescriptionFromUI.isEmpty()) {
+                    setLoading(true); // show progressBar + disable buttons with gray color
 
-                if (themeDescription != null && !themeDescription.isEmpty()) {
-                    generateTheme(themeDescription, account, intent);
-                    startActivity(intent);
-                    finish();
+                    // SAVE the new description to the user's account data.
+                    accountManager.setUserData(account, "theme_description", newThemeDescriptionFromUI);
+
+                    generateTheme(newThemeDescriptionFromUI, account, (bg, text) -> {
+                        intent.putExtra(KEY_BACKGROUND_COLOR, bg);
+                        intent.putExtra(KEY_TEXT_COLOR, text);
+                        setLoading(false);
+                        startActivity(intent);
+                        finish();
+                    });
                 } else {
-//                    saveThemeToAccount(account,backgroundColor,textColor);
+                    String backgroundColor = accountManager.getUserData(account, KEY_BACKGROUND_COLOR);
+                    String textColor = accountManager.getUserData(account, KEY_TEXT_COLOR);
+
+                    if (!isValidColor(backgroundColor)) {
+                        backgroundColor = "#FFFFFF";
+                        accountManager.setUserData(account, KEY_BACKGROUND_COLOR, backgroundColor);
+                    }
+                    if (!isValidColor(textColor)) {
+                        textColor = "#000000";
+                        accountManager.setUserData(account, KEY_TEXT_COLOR, textColor);
+                    }
+
+                    intent.putExtra(KEY_BACKGROUND_COLOR, backgroundColor);
+                    intent.putExtra(KEY_TEXT_COLOR, textColor);
                     startActivity(intent);
                     finish();
                 }
                 return;
             }
         }
-
         Toast.makeText(this, "Invalid username or password", Toast.LENGTH_SHORT).show();
     }
 
@@ -122,9 +135,14 @@ public class LoginActivity extends AppCompatActivity {
         intent.putExtra(KEY_CITY_LIST, "");
 
         if (!themeDescription.isEmpty()) {
-            generateTheme(themeDescription, account, intent);
-            startActivity(intent);
-            finish();
+            setLoading(true);
+            generateTheme(themeDescription, account, (bg, text) -> {
+                intent.putExtra(KEY_BACKGROUND_COLOR, bg);
+                intent.putExtra(KEY_TEXT_COLOR, text);
+                setLoading(false);
+                startActivity(intent);
+                finish();
+            });
         } else {
             saveDefaultThemeToAccount(account);
             startActivity(intent);
@@ -132,33 +150,49 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void generateTheme(String description, Account account, Intent intent) {
-        String apiKey = BuildConfig.GEMINI_API_KEY;
-        if (apiKey == null || apiKey.isEmpty()) {
-            Toast.makeText(this, "API key is not added. Please add it to your local.properties file.", Toast.LENGTH_LONG).show();
-            saveDefaultThemeToAccount(account);
-            return;
-        }
+    private void setLoading(boolean loading) {
+        if (progressBar != null) progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        loginButton.setEnabled(!loading);
+        signUpButton.setEnabled(!loading);
+        usernameEditText.setEnabled(!loading);
+        passwordEditText.setEnabled(!loading);
+        themeDescriptionEditText.setEnabled(!loading);
+    }
 
+    private void generateTheme(String description, Account account, ThemeCallback callback) {
+        String apiKey = BuildConfig.GEMINI_API_KEY;
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
 
+        Runnable useDefaults = () -> {
+            String defaultBackground = "#FFFFFF";
+            String defaultText = "#000000";
+            saveDefaultThemeToAccount(account);
+            callback.onReady(defaultBackground, defaultText);
+        };
+
+        //ignore warning here of if condition being always false
+        if (apiKey == null || apiKey.isEmpty()) {
+            Toast.makeText(this, "API key is not added. Using default theme.", Toast.LENGTH_LONG).show();
+            handler.post(useDefaults);
+            return;
+        }
+
         executor.execute(() -> {
             HttpURLConnection conn = null;
+            String bgOut = null, textOut = null;
             try {
                 URL url = new URL("https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent?key=" + apiKey);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
 
-                String jsonBody = "{" +
-                        "\"contents\": [{" +
-                        "\"parts\":[{" +
-                        "\"text\": \"Generate a UI theme based on the following description: " + description + ". " +
-                        "Provide a JSON object with 'backgroundColor' and 'textColor' in hex format.\"" +
-                        "}]" +
-                        "}]" +
-                        "}";
+                String jsonBody = "{"
+                        + "\"contents\":[{"
+                        + "\"parts\":[{\"text\":\"Generate a UI theme based on the following description: " + description + ". "
+                        + "Provide ONLY a JSON object with 'backgroundColor' and 'textColor' in hex format.\"}]"
+                        + "}]"
+                        + "}";
 
                 conn.setDoOutput(true);
                 try (OutputStream os = conn.getOutputStream()) {
@@ -167,79 +201,56 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
                 int responseCode = conn.getResponseCode();
-
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     StringBuilder response = new StringBuilder();
                     try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                        String responseLine;
-                        while ((responseLine = br.readLine()) != null) {
-                            response.append(responseLine.trim());
-                        }
+                        String line;
+                        while ((line = br.readLine()) != null) response.append(line.trim());
                     }
 
-                    try {
-                        JSONObject jsonResponse = new JSONObject(response.toString());
-                        String resultText = jsonResponse.getJSONArray("candidates")
-                                .getJSONObject(0)
-                                .getJSONObject("content")
-                                .getJSONArray("parts")
-                                .getJSONObject(0)
-                                .getString("text");
+                    JSONObject jsonResponse = new JSONObject(response.toString());
+                    String resultText = jsonResponse.getJSONArray("candidates")
+                            .getJSONObject(0)
+                            .getJSONObject("content")
+                            .getJSONArray("parts")
+                            .getJSONObject(0)
+                            .getString("text");
 
-                        int start = resultText.indexOf("{");
-                        int end = resultText.lastIndexOf("}");
-                        if (start != -1 && end != -1 && end > start) {
-                            String jsonString = resultText.substring(start, end + 1);
-                            JSONObject theme = new JSONObject(jsonString);
-                            String backgroundColor = theme.getString("backgroundColor");
-                            String textColor = theme.getString("textColor");
+                    int start = resultText.indexOf("{");
+                    int end = resultText.lastIndexOf("}");
+                    if (start != -1 && end != -1 && end > start) {
+                        JSONObject theme = new JSONObject(resultText.substring(start, end + 1));
+                        String bg = theme.optString("backgroundColor", "#FFFFFF");
+                        String tx = theme.optString("textColor", "#000000");
 
-                            if (isValidColor(backgroundColor) && isValidColor(textColor)) {
-                                // Save the new theme colors to the AccountManager
-                                accountManager.setUserData(account, KEY_BACKGROUND_COLOR, backgroundColor);
-                                accountManager.setUserData(account, KEY_TEXT_COLOR, textColor);
-                            } else {
-                                handler.post(() -> {
-                                    Toast.makeText(LoginActivity.this, "Invalid string for theme. Using default values.", Toast.LENGTH_LONG).show();
-                                    saveDefaultThemeToAccount(account);
-                                });
-                            }
-
-                            handler.post(() -> {
-                                saveThemeToAccount(account, backgroundColor, textColor);
-                            });
-                        } else {
-                            handler.post(() -> {
-                                Toast.makeText(LoginActivity.this, "Failed to parse theme. Using default values.", Toast.LENGTH_LONG).show();
-                                saveDefaultThemeToAccount(account);
-                            });
+                        if (isValidColor(bg) && isValidColor(tx)) {
+                            bgOut = bg; textOut = tx;
+                            accountManager.setUserData(account, KEY_BACKGROUND_COLOR, bgOut);
+                            accountManager.setUserData(account, KEY_TEXT_COLOR, textOut);
                         }
-                    } catch (Exception parseException) {
-                        handler.post(() -> {
-                            Toast.makeText(LoginActivity.this, "Failed to parse theme. Using default values.", Toast.LENGTH_LONG).show();
-                            saveDefaultThemeToAccount(account);
-                        });
                     }
-                } else {
-                    handler.post(() -> {
-                        Toast.makeText(LoginActivity.this, "Failed to generate theme. Using default values.", Toast.LENGTH_LONG).show();
-                        saveDefaultThemeToAccount(account);
-                    });
                 }
-
-            } catch (Exception e) {
-                handler.post(() -> {
-                    Toast.makeText(LoginActivity.this, "Failed to generate theme. Using default values.", Toast.LENGTH_LONG).show();
-                    saveDefaultThemeToAccount(account);
-                });
+            } catch (Exception ignored) {
             } finally {
-                if (conn != null) {
-                    conn.disconnect();
-                }
+                if (conn != null) conn.disconnect();
+                String finalBg = (isValidColor(bgOut) ? bgOut : "#FFFFFF");
+                String finalTx = (isValidColor(textOut) ? textOut : "#000000");
+                // Ensure account has something saved
+                saveThemeToAccount(account, finalBg, finalTx);
+
+                handler.post(() -> {
+                    callback.onReady(finalBg, finalTx);
+                });
+
+                executor.shutdown();
             }
         });
     }
 
+
+    public interface ThemeCallback {
+        void onReady(String backgroundColor, String textColor);
+    }
     private boolean isValidColor(String s) {
         try {
             Color.parseColor(s);

@@ -43,6 +43,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // DEBUGGING CODE
+        // Retrieve the color values passed from LoginActivity
+        String backgroundColor = getIntent().getStringExtra(LoginActivity.KEY_BACKGROUND_COLOR);
+        String textColor = getIntent().getStringExtra(LoginActivity.KEY_TEXT_COLOR);
+
+        // Create a message string for the toast
+        String themeValuesMessage = "Theme Received:\nBG: " + backgroundColor + "\nText: " + textColor;
+
+        // Display the toast message. LENGTH_LONG makes it stay on screen longer.
+        android.widget.Toast.makeText(this, themeValuesMessage, android.widget.Toast.LENGTH_LONG).show();
+
         accountManager = AccountManager.get(this);
 
         String username = getIntent().getStringExtra("username");
