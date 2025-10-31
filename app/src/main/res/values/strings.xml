@@ -6,8 +6,7 @@
     <string name="sign_in_hint">Sign In</string>
     <string name="create_account_hint">Create an account</string>
     <string name="theme_hint">Describe your desired theme</string>
-    <string name="username">Username</string>
-    <string name="password">Password</string>
-    <string name="theme_description">Describe your desired theme</string>
-    <string name="sign_in">Sign In</string>
+    <string name="locations_title">List of Locations</string>
+    <string name="add_location_hint">Add a location</string>
+    <string name="logout_hint">Logout</string>
 </resources>

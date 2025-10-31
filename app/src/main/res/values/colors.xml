@@ -8,4 +8,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="box_grey">#EEEEEE</color>
+    <color name="logout_button_red">#B23B3B</color>
 </resources>

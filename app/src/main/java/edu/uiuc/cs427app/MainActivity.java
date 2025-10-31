@@ -348,6 +348,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setTag(cityName); // Tag for easy identification
 
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        rowParams.setMargins(0, 20, 0,0);
+        row.setLayoutParams(rowParams);
+
         // City name text view
         android.widget.TextView cityText = new android.widget.TextView(this);
         cityText.setText(cityName);
@@ -356,12 +362,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
         // Programatically creating buttons, intializing colors/shape (rounded corner)
-        GradientDrawable shape = new GradientDrawable();
-        shape.setCornerRadius(
+        GradientDrawable detailsButtonShape = new GradientDrawable();
+        detailsButtonShape.setCornerRadius(
                 TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_DIP, 100,
                         getResources().getDisplayMetrics()));
-        shape.setColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        detailsButtonShape.setColor(ContextCompat.getColor(this, R.color.purple_500));
+
+        GradientDrawable removeButtonShape = new GradientDrawable();
+        removeButtonShape.setCornerRadius(
+                TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, 100,
+                        getResources().getDisplayMetrics()));
+        removeButtonShape.setColor(ContextCompat.getColor(this, R.color.logout_button_red));
+
         int padding = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 4,
                 getResources().getDisplayMetrics());
@@ -374,7 +388,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         Button detailsButton = new Button(this);
         detailsButton.setText("Details");
         detailsButton.setTextColor(Color.WHITE);
-        detailsButton.setBackground(shape);
+        detailsButton.setBackground(detailsButtonShape);
         detailsButton.setTypeface(null, Typeface.NORMAL);
 
         LinearLayout.LayoutParams detailsParams = new LinearLayout.LayoutParams(
@@ -395,7 +409,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         // Remove button
         Button removeButton = new Button(this);
-        removeButton.setBackground(shape);
+        removeButton.setBackground(removeButtonShape);
         removeButton.setTypeface(null, Typeface.NORMAL);
         removeButton.setText("Remove");
         removeButton.setTextColor(Color.WHITE);
@@ -428,7 +442,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         accountManager = AccountManager.get(this);
         username = getIntent().getStringExtra("username");
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Team #417 - " + username);
+            getSupportActionBar().setTitle("Team 417 - " + username);
         }
 
         Account[] accounts = accountManager.getAccountsByType(LoginActivity.ACCOUNT_TYPE);
