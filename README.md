@@ -141,20 +141,20 @@ Meeting notes: The team met to record the demo for iteration 3.
 
 <b>Project Week 6</b>
 </br>
-Members present: List the NetID of the people who attended the meeting
+Members present: zhenbi2, aaroncl2, nk46, sabelle2, diveya2, nasare2, satejrs2, yuangc3
 </br>
-Meeting notes: Explain the overall team progress and a summary of discussion
+Meeting notes: Everyone finished up their part to Iteration 3 of the Android Project and performed some testing for the 4 Credit Project.
 </br>
 | NetID          | Progress from last week         | Tasks for next week   |
 | ---------------| --------------------------------| ----------------------|
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
+|  zhenbi2              |       finished implementation for add new city to loc list                          |    implementation for weather page                  |
+|  aaroncl2              |      finished implementation llm ui customization                            |    implementation for map screen                   |
+|  sabelle2              |      finished implementation for add new city to loc list                           |   implementation for UI consistency                   |
+|  diveya2              |       finished implementation user auth/login                           |    implementation for map screen                    |
+|  nasare2              |       finished implementation llm ui customization                           |   implementation for weather insights                    |
+|  satejrs2              |      finished implementation user auth/login                            |   implementation for weather aware city view                      |
+|  yuangc3              |       finished implementation for add new city to loc list                           |    implementation progress for weather aware city view                   |
+|  nk46              |          finished implementation llm ui customization                        |   implementation for weather insights                    |
 </br>
 
 
