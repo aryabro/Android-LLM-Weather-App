@@ -96,6 +96,7 @@ public class DetailsActivity extends BaseActivity implements View.OnClickListene
                         double lat = cityObject.getDouble("lat");
                         double lon = cityObject.getDouble("lon");
 
+                        // extract lat and long coords
                         runOnUiThread(() -> {
                             Intent intent = new Intent(DetailsActivity.this, MapActivity.class);
                             intent.putExtra("city", cityName);
