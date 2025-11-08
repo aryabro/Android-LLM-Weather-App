@@ -20,6 +20,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "GEMINI_API_KEY", properties.getProperty('GEMINI_API_KEY', '""')
+        buildConfigField "String", "OPENWEATHER_API_KEY", properties.getProperty('OPENWEATHER_API_KEY', '""')
     }
     /* if you see lint error, add this back */
     lint {
@@ -56,6 +57,12 @@ dependencies {
     def room_version = "2.6.1"
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    // Networking
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    
+    // JSON parsing
+    implementation 'com.google.code.gson:gson:2.10.1'
 
     // Testing
     testImplementation 'junit:junit:4.13.2'

@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -53,6 +54,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_weather);
 
+        // Try to get cityId first, then fall back to city name
+        int cityId = getIntent().getIntExtra("cityId", -1);
         cityName = getIntent().getStringExtra("city");
         cityLat = getIntent().getDoubleExtra("lat", 0.0);
         cityLng = getIntent().getDoubleExtra("lng", 0.0);
@@ -66,24 +69,27 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         errorView = findViewById(R.id.weatherError);
         insightsButton = findViewById(R.id.weatherInsightsButton);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Weather - " + cityName);
-        }
-
-        cityTitleView.setText(cityName);
-        dateTimeView.setText(getFormattedCityDateTime(cityName));
-
         client = new OkHttpClient();
         gson = new Gson();
         mainHandler = new Handler(Looper.getMainLooper());
 
         insightsButton.setOnClickListener(this);
 
-        // If coordinates not provided, fetch from database
-        if (cityLat == 0.0 && cityLng == 0.0) {
+        // If cityId is provided, fetch city info from database
+        if (cityId != -1) {
+            fetchCityFromDatabaseById(cityId);
+        } else if (cityLat == 0.0 && cityLng == 0.0) {
+            // If coordinates not provided, fetch from database by name
             fetchCoordinatesFromDatabase();
         } else {
             // Fetch weather data with provided coordinates
+            if (cityName != null) {
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setTitle("Weather - " + cityName);
+                }
+                cityTitleView.setText(cityName);
+                dateTimeView.setText(getFormattedCityDateTime(cityName));
+            }
             fetchWeatherData();
         }
     }
@@ -139,12 +145,47 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         return map;
     }
 
+    private void fetchCityFromDatabaseById(int cityId) {
+        new Thread(() -> {
+            try {
+                CityDao dao = DatabaseClient.getInstance(this).getAppDatabase().cityDao();
+                City city = dao.findById(cityId);
+                if (city != null) {
+                    cityName = city.getCity();
+                    cityLat = city.getLat();
+                    cityLng = city.getLng();
+                    mainHandler.post(() -> {
+                        if (getSupportActionBar() != null) {
+                            getSupportActionBar().setTitle("Weather - " + cityName);
+                        }
+                        cityTitleView.setText(cityName);
+                        dateTimeView.setText(getFormattedCityDateTime(cityName));
+                        if (cityLat != 0.0 || cityLng != 0.0) {
+                            fetchWeatherData();
+                        } else {
+                            showError("Coordinates not found for " + cityName);
+                        }
+                    });
+                } else {
+                    mainHandler.post(() -> {
+                        showError("City not found in database with ID: " + cityId);
+                    });
+                }
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    showError("Failed to fetch city: " + e.getMessage());
+                });
+            }
+        }).start();
+    }
+
     private void fetchCoordinatesFromDatabase() {
         new Thread(() -> {
             try {
                 CityDao dao = DatabaseClient.getInstance(this).getAppDatabase().cityDao();
-                City city = dao.findFirstByName(cityName);
-                if (city != null) {
+                List<City> cities = dao.findAllByName(cityName);
+                if (cities != null && !cities.isEmpty()) {
+                    City city = cities.get(0);
                     cityLat = city.getLat();
                     cityLng = city.getLng();
                     mainHandler.post(() -> {
@@ -184,7 +225,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             apiKey = "994cc37a9f641179032b6ec366feb52d";
         }
 
-        Log.d("WeatherActivity", "Using API key: " + (apiKey != null && apiKey.length() > 5 ? apiKey.substring(0, 5) + "..." : apiKey));
+        Log.d("WeatherActivity",
+                "Using API key: " + (apiKey != null && apiKey.length() > 5 ? apiKey.substring(0, 5) + "..." : apiKey));
 
         if (cityLat == 0.0 && cityLng == 0.0) {
             showError("Invalid coordinates for " + cityName + " (lat: " + cityLat + ", lng: " + cityLng + ")");
