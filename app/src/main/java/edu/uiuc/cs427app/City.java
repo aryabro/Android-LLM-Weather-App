@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "cities")
 public class City {
     private String city;
+    private double lat;
+    private double lng;
     private String country;
     private String iso2;
     private String iso3;
@@ -21,11 +23,12 @@ public class City {
     }
 
     // Constructor to create a new City object.
-    public City(String city, String city_ascii, String country,
+    public City(String city, double lat, double lng, String country,
             String iso2, String iso3, String admin_name, int id) {
         this.id = id;
         this.city = city;
-        this.city_ascii = city_ascii;
+        this.lat = lat;
+        this.lng = lng;
         this.country = country;
         this.iso2 = iso2;
         this.iso3 = iso3;
@@ -93,5 +96,25 @@ public class City {
     // Sets the admin name.
     public void setAdmin_name(String admin_name) {
         this.admin_name = admin_name;
+    }
+
+    // Gets the latitude.
+    public double getLat() {
+        return lat;
+    }
+
+    // Sets the latitude.
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    // Gets the longitude.
+    public double getLng() {
+        return lng;
+    }
+
+    // Sets the longitude.
+    public void setLng(double lng) {
+        this.lng = lng;
     }
 }
