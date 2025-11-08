@@ -11,8 +11,8 @@
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:weightSum="2"
-        android:paddingStart="50dp"
-        android:paddingEnd="50dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -30,7 +30,8 @@
                 android:id="@+id/LocationsHeaderText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
+                android:layout_marginTop="30dp"
+                android:layout_marginBottom="20dp"
                 android:textSize="24sp"
                 android:textIsSelectable="false"
                 android:textStyle="bold"
@@ -55,10 +56,14 @@
                 android:id="@+id/buttonAddLocation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
                 android:text="@string/add_location_hint"
                 android:textAllCaps="false"
                 android:textIsSelectable="false"
-                app:cornerRadius="100dp" />
+                android:backgroundTint="@color/purple_500"
+                android:textColor="@color/white"
+                app:cornerRadius="8dp" />
 
             <Button
                 android:id="@+id/buttonLogout"
@@ -68,7 +73,8 @@
                 android:textAllCaps="false"
                 android:textIsSelectable="false"
                 android:backgroundTint="@color/logout_button_red"
-                app:cornerRadius="100dp">
+                android:textColor="@color/white"
+                app:cornerRadius="8dp">
             </Button>
         </LinearLayout>
 

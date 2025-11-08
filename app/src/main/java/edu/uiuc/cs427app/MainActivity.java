@@ -45,7 +45,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private AccountManager accountManager;
     private Account account;
     private String username; // Current logged-in username required for theme
-    //this is the function for extracting all the cities in the world
+    // this is the function for extracting all the cities in the world
+
     private void importCitiesFromCSV() {
         new Thread(() -> {
             try {
@@ -56,24 +57,28 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 reader.readLine(); // 跳过 header
                 while ((line = reader.readLine()) != null) {
                     List<String> parts = parseCsvLine(line);
-                    if (parts.size() < 7) {
+                    if (parts.size() < 8) {
                         continue;
                     }
-                    // schema: city, city_ascii, country, iso2, iso3, admin_name, id
+                    // schema: city, lat, lng, country, iso2, iso3, admin_name, id
                     String city = parts.get(0).trim();
-                    String city_ascii = parts.get(1).trim();
-                    String country = parts.get(2).trim();
-                    String iso2 = parts.get(3).trim();
-                    String iso3 = parts.get(4).trim();
-                    String admin_name = parts.get(5).trim();
+
+                    double lat;
+                    double lng;
+                    String country = parts.get(3).trim();
+                    String iso2 = parts.get(4).trim();
+                    String iso3 = parts.get(5).trim();
+                    String admin_name = parts.get(6).trim();
                     int id;
                     try {
-                        id = Integer.parseInt(parts.get(6).trim());
+                        lat = Double.parseDouble(parts.get(1).trim());
+                        lng = Double.parseDouble(parts.get(2).trim());
+                        id = Integer.parseInt(parts.get(7).trim());
                     } catch (NumberFormatException nfe) {
                         continue;
                     }
 
-                    cities.add(new City(city, city_ascii, country, iso2, iso3, admin_name, id));
+                    cities.add(new City(city, lat, lng, country, iso2, iso3, admin_name, id));
 
                     if (cities.size() >= 500) {
                         DatabaseClient.getInstance(this).getAppDatabase()
@@ -91,7 +96,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             }
         }).start();
     }
-    //Parse the CSV file and extract the city name 
+
+    // Parse the CSV file and extract the city name
     private List<String> parseCsvLine(String line) {
         List<String> result = new ArrayList<>();
         if (line == null) {
@@ -271,6 +277,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         builder.setIcon(android.R.drawable.ic_dialog_info);
         builder.show();
     }
+
     // This shows the city list once user writes a city name
     // there would be many places that share the same city name
     private void showCityChoiceDialog(List<City> cities) {
@@ -325,9 +332,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         }
     }
-// Loads the user's saved city list from either their account storage (AccountManager)
-// It updates the local cityList and dynamically
-// adds each city to the UI.
+
+    // Loads the user's saved city list from either their account storage
+    // (AccountManager)
+    // It updates the local cityList and dynamically
+    // adds each city to the UI.
     private void loadCityListFromAccount() {
         cityList.clear();
         if (account != null && accountManager != null) {
@@ -344,97 +353,166 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             }
         }
     }
-// Dynamically add a city entry (name + Details + Remove buttons) to the UI
-    private void addCityToUI(String cityName) {
-        // Create row layout
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setTag(cityName); // Tag for easy identification
 
-        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+    // Dynamically add a city entry (name + WEATHER + MAP + REMOVE buttons) to the
+    // UI
+    private void addCityToUI(String cityName) {
+        // Create vertical container for city entry
+        LinearLayout cityEntry = new LinearLayout(this);
+        cityEntry.setOrientation(LinearLayout.VERTICAL);
+        cityEntry.setTag(cityName); // Tag for easy identification
+
+        LinearLayout.LayoutParams entryParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        rowParams.setMargins(0, 20, 0,0);
-        row.setLayoutParams(rowParams);
+        entryParams.setMargins(0, 20, 0, 20);
+        cityEntry.setLayoutParams(entryParams);
 
-        // City name text view
+        // City name text view - displayed prominently on top
         android.widget.TextView cityText = new android.widget.TextView(this);
         cityText.setText(cityName);
-        cityText.setTextSize(18);
+        cityText.setTextSize(20);
+        cityText.setTypeface(null, Typeface.BOLD);
         cityText.setTextColor(android.graphics.Color.parseColor(ThemeManager.getTextColor(this)));
-        cityText.setLayoutParams(new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        LinearLayout.LayoutParams cityTextParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        cityTextParams.setMargins(0, 0, 0, 10);
+        cityText.setLayoutParams(cityTextParams);
+
+        // Create horizontal layout for buttons
+        LinearLayout buttonRow = new LinearLayout(this);
+        buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams buttonRowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        buttonRow.setLayoutParams(buttonRowParams);
 
         // Programatically creating buttons, intializing colors/shape (rounded corner)
-        GradientDrawable detailsButtonShape = new GradientDrawable();
-        detailsButtonShape.setCornerRadius(
+        GradientDrawable purpleButtonShape = new GradientDrawable();
+        purpleButtonShape.setCornerRadius(
                 TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_DIP, 100,
+                        TypedValue.COMPLEX_UNIT_DIP, 8,
                         getResources().getDisplayMetrics()));
-        detailsButtonShape.setColor(ContextCompat.getColor(this, R.color.purple_500));
+        purpleButtonShape.setColor(ContextCompat.getColor(this, R.color.purple_500));
 
         GradientDrawable removeButtonShape = new GradientDrawable();
         removeButtonShape.setCornerRadius(
                 TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_DIP, 100,
+                        TypedValue.COMPLEX_UNIT_DIP, 8,
                         getResources().getDisplayMetrics()));
         removeButtonShape.setColor(ContextCompat.getColor(this, R.color.logout_button_red));
 
         int padding = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 4,
+                TypedValue.COMPLEX_UNIT_DIP, 12,
                 getResources().getDisplayMetrics());
 
         int marginHorizontal = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 2,
+                TypedValue.COMPLEX_UNIT_DIP, 4,
                 getResources().getDisplayMetrics());
 
-        // Details button
-        Button detailsButton = new Button(this);
-        detailsButton.setText("Details");
-        detailsButton.setTextColor(Color.WHITE);
-        detailsButton.setBackground(detailsButtonShape);
-        detailsButton.setTypeface(null, Typeface.NORMAL);
+        // WEATHER button
+        Button weatherButton = new Button(this);
+        weatherButton.setText("WEATHER");
+        weatherButton.setTextColor(Color.WHITE);
+        weatherButton.setBackground(purpleButtonShape);
+        weatherButton.setTypeface(null, Typeface.BOLD);
+        weatherButton.setTextAllCaps(true);
 
-        LinearLayout.LayoutParams detailsParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        detailsParams.setMargins(marginHorizontal, 0, marginHorizontal, 0);
-        detailsButton.setLayoutParams(detailsParams);
-        detailsButton.setLayoutParams(detailsParams);
-        detailsButton.setMinHeight(0);
-        detailsButton.setMinimumHeight(0);
-        detailsButton.setPadding(padding, padding / 2, padding, padding / 2);
-        detailsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, DetailsActivity.class);
+        LinearLayout.LayoutParams weatherParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        weatherParams.setMargins(0, 0, marginHorizontal, 0);
+        weatherButton.setLayoutParams(weatherParams);
+        weatherButton.setMinHeight(0);
+        weatherButton.setMinimumHeight(0);
+        weatherButton.setPadding(padding, padding / 2, padding, padding / 2);
+        weatherButton.setOnClickListener(v -> {
+            // Fetch city coordinates from database and open WeatherActivity
+            new Thread(() -> {
+                try {
+                    CityDao dao = DatabaseClient.getInstance(this)
+                            .getAppDatabase()
+                            .cityDao();
+                    City city = dao.findFirstByName(cityName);
+                    if (city != null) {
+                        runOnUiThread(() -> {
+                            Intent intent = new Intent(this, WeatherActivity.class);
+                            intent.putExtra("city", cityName);
+                            intent.putExtra("lat", city.getLat());
+                            intent.putExtra("lng", city.getLng());
+                            intent.putExtra("username", username);
+                            startActivity(intent);
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            Intent intent = new Intent(this, WeatherActivity.class);
+                            intent.putExtra("city", cityName);
+                            intent.putExtra("username", username);
+                            startActivity(intent);
+                        });
+                    }
+                } catch (Exception e) {
+                    runOnUiThread(() -> {
+                        Intent intent = new Intent(this, WeatherActivity.class);
+                        intent.putExtra("city", cityName);
+                        intent.putExtra("username", username);
+                        startActivity(intent);
+                    });
+                }
+            }).start();
+        });
+
+        // MAP button
+        Button mapButton = new Button(this);
+        mapButton.setText("MAP");
+        mapButton.setTextColor(Color.WHITE);
+        mapButton.setBackground(purpleButtonShape);
+        mapButton.setTypeface(null, Typeface.BOLD);
+        mapButton.setTextAllCaps(true);
+
+        LinearLayout.LayoutParams mapParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        mapParams.setMargins(0, 0, marginHorizontal, 0);
+        mapButton.setLayoutParams(mapParams);
+        mapButton.setMinHeight(0);
+        mapButton.setMinimumHeight(0);
+        mapButton.setPadding(padding, padding / 2, padding, padding / 2);
+        mapButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MapActivity.class);
             intent.putExtra("city", cityName);
             intent.putExtra("username", username);
             startActivity(intent);
         });
 
-        // Remove button
+        // REMOVE button
         Button removeButton = new Button(this);
         removeButton.setBackground(removeButtonShape);
-        removeButton.setTypeface(null, Typeface.NORMAL);
-        removeButton.setText("Remove");
+        removeButton.setTypeface(null, Typeface.BOLD);
+        removeButton.setText("REMOVE");
         removeButton.setTextColor(Color.WHITE);
+        removeButton.setTextAllCaps(true);
         removeButton.setMinHeight(0);
         removeButton.setMinimumHeight(0);
 
         LinearLayout.LayoutParams removeParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        removeParams.setMargins(marginHorizontal, 0, marginHorizontal, 0);
-        removeButton.setLayoutParams(removeParams);
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        removeParams.setMargins(0, 0, 0, 0);
         removeButton.setLayoutParams(removeParams);
         removeButton.setPadding(padding, padding / 2, padding, padding / 2);
-        removeButton.setOnClickListener(v -> removeCityFromList(cityName, row));
+        removeButton.setOnClickListener(v -> removeCityFromList(cityName, cityEntry));
 
-        row.addView(cityText);
-        row.addView(detailsButton);
-        row.addView(removeButton);
-        locationContainer.addView(row);
+        // Add views to layouts
+        buttonRow.addView(weatherButton);
+        buttonRow.addView(mapButton);
+        buttonRow.addView(removeButton);
+
+        cityEntry.addView(cityText);
+        cityEntry.addView(buttonRow);
+        locationContainer.addView(cityEntry);
     }
-// Initialize the activity, load user data, and set up buttons
+
+    // Initialize the activity, load user data, and set up buttons
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -484,7 +562,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             loadCityListFromAccount();
         }
     }
-// Handle button clicks for Add Location and Logout
+
+    // Handle button clicks for Add Location and Logout
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.buttonAddLocation) {
@@ -496,7 +575,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             finish();
         }
     }
-// Clean up resources when the activity is destroyed
+
+    // Clean up resources when the activity is destroyed
     @Override
     protected void onDestroy() {
         super.onDestroy();
