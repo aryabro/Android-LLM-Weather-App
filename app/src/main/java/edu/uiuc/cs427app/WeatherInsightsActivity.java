@@ -49,6 +49,9 @@ public class WeatherInsightsActivity extends BaseActivity {
     private Handler refreshHandler;
     private Runnable refreshCountdownRunnable;
 
+    /**
+     * Initializes the activity, sets up UI components, and starts question generation
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -349,6 +352,9 @@ public class WeatherInsightsActivity extends BaseActivity {
         }
     }
 
+    /**
+     * Cleans up resources when the activity is destroyed
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
