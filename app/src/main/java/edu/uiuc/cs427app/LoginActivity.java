@@ -207,8 +207,15 @@ public class LoginActivity extends AppCompatActivity {
 
                 String jsonBody = "{"
                         + "\"contents\":[{"
-                        + "\"parts\":[{\"text\":\"Generate a UI theme based on the following description: " + description + ". "
-                        + "Provide ONLY a JSON object with 'backgroundColor', 'textColor', 'buttonBackgroundColor', and 'buttonTextColor' in hex format.\"}]"
+                        + "\"parts\":[{\"text\":\"Generate a UI theme based on this description: " + description + ". "
+                        + "Requirements: "
+                        + "1. Ensure text colors have at least 4.5:1 contrast ratio with their backgrounds (WCAG AA standard). "
+                        + "2. All colors must be valid hex format with # prefix (e.g., #FF5733). "
+                        + "3. Colors should harmonize with each other and match the theme description. "
+                        + "4. Button colors should be distinct and visually appealing. "
+                        + "Respond with ONLY a valid JSON object (no markdown, no explanations, no additional text) containing exactly these fields: "
+                        + "'backgroundColor', 'textColor', 'buttonBackgroundColor', 'buttonTextColor'. "
+                        + "Example format: {\\\"backgroundColor\\\":\\\"#FFFFFF\\\",\\\"textColor\\\":\\\"#000000\\\",\\\"buttonBackgroundColor\\\":\\\"#007BFF\\\",\\\"buttonTextColor\\\":\\\"#FFFFFF\\\"}\"}]"
                         + "}]"
                         + "}";
 

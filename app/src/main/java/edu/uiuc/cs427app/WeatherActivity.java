@@ -26,13 +26,13 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import edu.uiuc.cs427app.BuildConfig;
-import edu.uiuc.cs427app.City;
-import edu.uiuc.cs427app.CityDao;
-import edu.uiuc.cs427app.DatabaseClient;
+import okhttp3.ResponseBody;
 
 public class WeatherActivity extends BaseActivity implements View.OnClickListener {
+
+    private static final String TAG = "WeatherActivity";
+    private static final String NOT_AVAILABLE = "N/A";
+    private static final String ERROR_TEXT = "Error";
 
     private String cityName;
     private double cityLat;
@@ -48,6 +48,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private OkHttpClient client;
     private Gson gson;
     private Handler mainHandler;
+    private WeatherData currentWeatherData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,9 +98,32 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.weatherInsightsButton) {
-            Intent intent = new Intent(this, WeatherInsightsActivity.class);
-            intent.putExtra("city", cityName);
-            startActivity(intent);
+            if (currentWeatherData != null) {
+                Intent intent = new Intent(this, WeatherInsightsActivity.class);
+                intent.putExtra("city", cityName);
+
+                //dynamic theme support for weatherinsights
+                String username = getIntent().getStringExtra("username");
+                if (username != null) {
+                    intent.putExtra("username", username);
+                }
+
+                // Pass weather data
+                if (currentWeatherData.getMain() != null) {
+                    intent.putExtra("temperature", currentWeatherData.getMain().getTemp());
+                    intent.putExtra("humidity", currentWeatherData.getMain().getHumidity());
+                }
+                if (currentWeatherData.getWeather() != null && currentWeatherData.getWeather().length > 0) {
+                    intent.putExtra("condition", currentWeatherData.getWeather()[0].getDescription());
+                    intent.putExtra("weatherMain", currentWeatherData.getWeather()[0].getMain());
+                }
+                if (currentWeatherData.getWind() != null) {
+                    intent.putExtra("windSpeed", currentWeatherData.getWind().getSpeed());
+                    intent.putExtra("windDeg", currentWeatherData.getWind().getDeg());
+                }
+
+                startActivity(intent);
+            }
         }
     }
 
@@ -119,7 +143,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         if (known.containsKey(key)) {
             try {
                 return ZoneId.of(known.get(key));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.w(TAG, "Invalid timezone for city: " + city, e);
             }
         }
         return ZoneId.systemDefault();
@@ -211,8 +236,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private void fetchWeatherData() {
         // Get API key from local.properties via BuildConfig
         String apiKey = BuildConfig.OPENWEATHER_API_KEY;
-        Log.d("WeatherActivity", "API Key from BuildConfig (raw): " + apiKey);
-        Log.d("WeatherActivity", "API Key length: " + (apiKey != null ? apiKey.length() : 0));
 
         // Remove quotes if present and trim
         if (apiKey != null) {
@@ -221,20 +244,17 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
         // Fallback to hardcoded key if not configured (for testing)
         if (apiKey == null || apiKey.isEmpty() || apiKey.equals("\"\"") || apiKey.equals("")) {
-            Log.w("WeatherActivity", "API key not found in BuildConfig, using fallback");
+            Log.w(TAG, "API key not found in BuildConfig, using fallback");
             apiKey = "994cc37a9f641179032b6ec366feb52d";
         }
 
-        Log.d("WeatherActivity",
-                "Using API key: " + (apiKey != null && apiKey.length() > 5 ? apiKey.substring(0, 5) + "..." : apiKey));
-
         if (cityLat == 0.0 && cityLng == 0.0) {
             showError("Invalid coordinates for " + cityName + " (lat: " + cityLat + ", lng: " + cityLng + ")");
-            Log.e("WeatherActivity", "Invalid coordinates: lat=" + cityLat + ", lng=" + cityLng);
+            Log.e(TAG, "Invalid coordinates: lat=" + cityLat + ", lng=" + cityLng);
             return;
         }
 
-        Log.d("WeatherActivity", "Fetching weather for: " + cityName + " at (" + cityLat + ", " + cityLng + ")");
+        Log.d(TAG, "Fetching weather for: " + cityName + " at (" + cityLat + ", " + cityLng + ")");
 
         try {
             String url = "https://api.openweathermap.org/data/2.5/weather?lat=" +
@@ -243,7 +263,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     "&appid=" + apiKey +
                     "&units=metric";
 
-            Log.d("WeatherActivity", "Request URL: " + url.replace(apiKey, "API_KEY_HIDDEN"));
+            Log.d(TAG, "Request URL: " + url.replace(apiKey, "API_KEY_HIDDEN"));
 
             Request request = new Request.Builder()
                     .url(url)
@@ -252,41 +272,38 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.e("WeatherActivity", "Network request failed", e);
-                    mainHandler.post(() -> {
-                        showError("Failed to fetch weather data: " + e.getMessage());
-                    });
+                    Log.e(TAG, "Network request failed", e);
+                    mainHandler.post(() -> showError("Failed to fetch weather data: " + e.getMessage()));
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    String responseBody = response.body().string();
-                    Log.d("WeatherActivity", "Response code: " + response.code());
-                    Log.d("WeatherActivity",
-                            "Response body: " + responseBody.substring(0, Math.min(200, responseBody.length())));
+                    ResponseBody body = response.body();
+                    if (body == null) {
+                        mainHandler.post(() -> showError("Empty response from server"));
+                        return;
+                    }
+
+                    String responseBody = body.string();
+                    Log.d(TAG, "Response code: " + response.code());
+                    Log.d(TAG, "Response body: " + responseBody.substring(0, Math.min(200, responseBody.length())));
 
                     if (!response.isSuccessful()) {
-                        Log.e("WeatherActivity",
-                                "Unsuccessful response: " + response.code() + ", body: " + responseBody);
-                        mainHandler.post(() -> {
-                            showError("Failed to fetch weather data. Response code: " + response.code() + ". " +
-                                    (responseBody.length() > 100 ? responseBody.substring(0, 100) : responseBody));
-                        });
+                        Log.e(TAG, "Unsuccessful response: " + response.code() + ", body: " + responseBody);
+                        String errorMsg = "Failed to fetch weather data. Response code: " + response.code() + ". " +
+                                (responseBody.length() > 100 ? responseBody.substring(0, 100) : responseBody);
+                        mainHandler.post(() -> showError(errorMsg));
                         return;
                     }
 
                     try {
                         WeatherData weatherData = gson.fromJson(responseBody, WeatherData.class);
-                        Log.d("WeatherActivity", "Parsed weather data successfully");
-                        mainHandler.post(() -> {
-                            updateWeatherUI(weatherData);
-                        });
+                        Log.d(TAG, "Parsed weather data successfully");
+                        mainHandler.post(() -> updateWeatherUI(weatherData));
                     } catch (Exception e) {
-                        Log.e("WeatherActivity", "Failed to parse weather data", e);
-                        Log.e("WeatherActivity", "Response body was: " + responseBody);
-                        mainHandler.post(() -> {
-                            showError("Failed to parse weather data: " + e.getMessage());
-                        });
+                        Log.e(TAG, "Failed to parse weather data", e);
+                        Log.e(TAG, "Response body was: " + responseBody);
+                        mainHandler.post(() -> showError("Failed to parse weather data: " + e.getMessage()));
                     }
                 }
             });
@@ -297,12 +314,18 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
     private void updateWeatherUI(WeatherData weatherData) {
         if (weatherData == null) {
-            Log.e("WeatherActivity", "WeatherData is null");
+            Log.e(TAG, "WeatherData is null");
             showError("No weather data received");
             return;
         }
 
-        Log.d("WeatherActivity", "Updating UI with weather data");
+        // Store weather data for insights
+        this.currentWeatherData = weatherData;
+
+        // Enable insights button now that we have data
+        insightsButton.setEnabled(true);
+
+        Log.d(TAG, "Updating UI with weather data");
         errorView.setVisibility(View.GONE);
 
         // Temperature
@@ -310,7 +333,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             double temp = weatherData.getMain().getTemp();
             temperatureView.setText(String.format(Locale.getDefault(), "%.1f°C", temp));
         } else {
-            temperatureView.setText("N/A");
+            temperatureView.setText(NOT_AVAILABLE);
         }
 
         // Weather condition
@@ -318,11 +341,11 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             String condition = weatherData.getWeather()[0].getDescription();
             // Capitalize first letter
             if (condition != null && !condition.isEmpty()) {
-                condition = condition.substring(0, 1).toUpperCase() + condition.substring(1);
+                condition = condition.substring(0, 1).toUpperCase(Locale.getDefault()) + condition.substring(1);
             }
             conditionView.setText(condition);
         } else {
-            conditionView.setText("N/A");
+            conditionView.setText(NOT_AVAILABLE);
         }
 
         // Humidity
@@ -330,7 +353,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             int humidity = weatherData.getMain().getHumidity();
             humidityView.setText(String.format(Locale.getDefault(), "%d%%", humidity));
         } else {
-            humidityView.setText("N/A");
+            humidityView.setText(NOT_AVAILABLE);
         }
 
         // Wind condition
@@ -340,7 +363,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             String direction = getWindDirection(deg);
             windView.setText(String.format(Locale.getDefault(), "%.1f m/s %s", speed, direction));
         } else {
-            windView.setText("N/A");
+            windView.setText(NOT_AVAILABLE);
         }
     }
 
@@ -354,9 +377,9 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private void showError(String message) {
         errorView.setText(message);
         errorView.setVisibility(View.VISIBLE);
-        temperatureView.setText("Error");
-        conditionView.setText("Error");
-        humidityView.setText("Error");
-        windView.setText("Error");
+        temperatureView.setText(ERROR_TEXT);
+        conditionView.setText(ERROR_TEXT);
+        humidityView.setText(ERROR_TEXT);
+        windView.setText(ERROR_TEXT);
     }
 }

@@ -12,7 +12,7 @@ The code for CS427 Android app.
 | Niranjan Kalaiselvan |     nk46      |  nk46-cloud |   Developer   |                   Java                     |
 |    Sabelle Huang     |    sabelle2   |   sabelle   |   Developer   |        Python, Java, JavaScript, XML       |
 |     Divey Anand      |    diveya2    |   thivaey   |   Tech Lead   |             Python, JavaScript             |
-|   Aryaman Nasare     |    nasare2    |   aryabro   |   Developer   |              Web Development               |
+|   Aryaman Nasare     |    nasare2    |   aryabro   |   Developer   |        Python, SQL, JavaScript, C++        |
 |  Satej Sukthankar    |    satejrs2   |   satej006  |   Developer   |          Python, Java, JavaScript          |
 |      Yuang Cai       |    yuangc3    |   yuangc3   |   Developer   |     Python, C/C++, JavaScript, HTML/CSS    |
 <br/>
