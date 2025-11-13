@@ -50,6 +50,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Handler mainHandler;
     private WeatherData currentWeatherData;
 
+    // creates weather activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +96,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
+    // sets up weather insights
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.weatherInsightsButton) {
@@ -127,6 +129,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
+    // for a given city, returns formatted time
     private String getFormattedCityDateTime(String city) {
         ZoneId zoneId = resolveZoneIdForCity(city);
         ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), zoneId);
@@ -134,6 +137,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         return now.format(fmt);
     }
 
+    // returns zoneID for a given city
     private ZoneId resolveZoneIdForCity(String city) {
         if (city == null) {
             return ZoneId.systemDefault();
@@ -150,6 +154,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         return ZoneId.systemDefault();
     }
 
+    // gets city timezones
     private Map<String, String> getKnownCityTimezones() {
         Map<String, String> map = new HashMap<>();
         map.put("new york", "America/New_York");
@@ -170,6 +175,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         return map;
     }
 
+    // gets city name from database (ID)
     private void fetchCityFromDatabaseById(int cityId) {
         new Thread(() -> {
             try {
@@ -204,6 +210,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }).start();
     }
 
+    // gets coordinates
     private void fetchCoordinatesFromDatabase() {
         new Thread(() -> {
             try {
@@ -233,6 +240,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }).start();
     }
 
+    // gets weather data from api
     private void fetchWeatherData() {
         // Get API key from local.properties via BuildConfig
         String apiKey = BuildConfig.OPENWEATHER_API_KEY;
@@ -312,6 +320,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
+    // updates weather UI
     private void updateWeatherUI(WeatherData weatherData) {
         if (weatherData == null) {
             Log.e(TAG, "WeatherData is null");
@@ -367,6 +376,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
+    // returns wind direction
     private String getWindDirection(double degrees) {
         String[] directions = { "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
                 "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW" };
@@ -374,6 +384,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         return directions[index];
     }
 
+    // error display
     private void showError(String message) {
         errorView.setText(message);
         errorView.setVisibility(View.VISIBLE);

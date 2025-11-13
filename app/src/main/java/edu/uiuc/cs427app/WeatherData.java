@@ -12,14 +12,17 @@ public class WeatherData {
     @SerializedName("wind")
     private Wind wind;
 
+    // return main class
     public Main getMain() {
         return main;
     }
 
+    // return weather data
     public Weather[] getWeather() {
         return weather;
     }
 
+    // returns wind data
     public Wind getWind() {
         return wind;
     }
@@ -31,10 +34,12 @@ public class WeatherData {
         @SerializedName("humidity")
         private int humidity;
 
+        // returns the temp
         public double getTemp() {
             return temp;
         }
 
+        // returns humidity
         public int getHumidity() {
             return humidity;
         }
@@ -47,10 +52,12 @@ public class WeatherData {
         @SerializedName("description")
         private String description;
 
+        // gets main
         public String getMain() {
             return main;
         }
 
+        // gets the weather description
         public String getDescription() {
             return description;
         }
@@ -63,10 +70,12 @@ public class WeatherData {
         @SerializedName("deg")
         private double deg;
 
+        // gets the wind speed
         public double getSpeed() {
             return speed;
         }
 
+        // gets the wind degree
         public double getDeg() {
             return deg;
         }
