@@ -483,6 +483,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         mapButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, MapActivity.class);
             intent.putExtra("city", city.getCity());
+            intent.putExtra("lat", city.getLat());
+            intent.putExtra("lng", city.getLng());
             intent.putExtra("username", username);
             startActivity(intent);
         });
