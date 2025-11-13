@@ -133,12 +133,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Weather Insights"
-<<<<<<< HEAD
             android:textAllCaps="false"
             app:cornerRadius="8dp" />
-=======
-            android:textAllCaps="false" />
->>>>>>> 832d759 (Implement weather-aware city view feature)
-
     </LinearLayout>
 </ScrollView>
