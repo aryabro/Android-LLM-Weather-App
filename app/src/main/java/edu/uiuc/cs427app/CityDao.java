@@ -27,4 +27,12 @@ public interface CityDao {
     // Counts the total number of cities in the database.
     @Query("SELECT COUNT(*) FROM cities")
     int countCities();
+
+    // Deletes a city by its id.
+    @Query("DELETE FROM cities WHERE id = :id")
+    void deleteById(int id);
+
+    // Deletes all cities with the given ids.
+    @Query("DELETE FROM cities WHERE id IN (:ids)")
+    void deleteByIds(List<Integer> ids);
 }

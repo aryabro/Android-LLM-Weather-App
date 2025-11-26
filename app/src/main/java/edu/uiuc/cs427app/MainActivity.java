@@ -45,9 +45,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private AccountManager accountManager;
     private Account account;
     private String username; // Current logged-in username required for theme
+    
     // this is the function for extracting all the cities in the world
-
     private void importCitiesFromCSV() {
+        AppIdlingResource.increment(); // Mark async operation start
         new Thread(() -> {
             try {
                 BufferedReader reader = new BufferedReader(
@@ -93,6 +94,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 reader.close();
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                AppIdlingResource.decrement(); // Mark async operation complete
             }
         }).start();
     }
@@ -186,6 +189,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         progressDialog.setCancelable(false);
         progressDialog.show();
 
+        AppIdlingResource.increment(); // Mark async operation start
         new Thread(() -> {
             try {
                 CityDao dao = DatabaseClient.getInstance(this)
@@ -218,6 +222,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                             }
                             showInputErrorDialog("Initializing city database, please try again in a moment.");
                         });
+                        AppIdlingResource.decrement(); // Mark async operation complete
                         return;
                     }
                 }
@@ -231,16 +236,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
                     if (matchedCities == null || matchedCities.isEmpty()) {
                         showInputErrorDialog("This may be not a valid city in the real world.");
+                        AppIdlingResource.decrement(); // Mark async operation complete
                     } else if (matchedCities.size() == 1) {
                         City city = matchedCities.get(0);
                         if (isCityAlreadyInList(city.getId())) {
                             showInputErrorDialog("This city already exists in your list!");
+                            AppIdlingResource.decrement(); // Mark async operation complete
                         } else {
                             addCityToList(city);
                             showSuccessDialog(city.getCity() + ", " + city.getCountry());
+                            // Note: decrement is called in addCityToUI after UI is created
                         }
                     } else {
                         showCityChoiceDialog(matchedCities);
+                        AppIdlingResource.decrement(); // Mark async operation complete
                     }
                 });
             } catch (Exception e) {
@@ -250,6 +259,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     }
                     showInputErrorDialog("Unexpected error during validation. Please try again.");
                 });
+                AppIdlingResource.decrement(); // Mark async operation complete
             }
         }).start();
     }
@@ -367,6 +377,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     // UI
     private void addCityToUI(int cityId) {
         // Fetch city information from database in background thread
+        AppIdlingResource.increment(); // Mark async operation start
         new Thread(() -> {
             try {
                 CityDao dao = DatabaseClient.getInstance(this)
@@ -376,10 +387,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 if (city != null) {
                     runOnUiThread(() -> {
                         createCityUIEntry(city, cityId);
+                        AppIdlingResource.decrement(); // Mark async operation complete after UI is created
                     });
+                } else {
+                    AppIdlingResource.decrement(); // Mark async operation complete if city not found
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                AppIdlingResource.decrement(); // Mark async operation complete on error
             }
         }).start();
     }
@@ -587,6 +602,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     String name = cityName == null ? null : cityName.trim();
                     if (name != null && !name.isEmpty()) {
                         // Find city by name and get ID
+                        AppIdlingResource.increment(); // Mark async operation start
                         new Thread(() -> {
                             try {
                                 CityDao dao = DatabaseClient.getInstance(this)
@@ -599,13 +615,19 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                                     if (!cityList.contains(cityId)) {
                                         runOnUiThread(() -> {
                                             cityList.add(cityId);
-                                            addCityToUI(cityId);
+                                            addCityToUI(cityId); // addCityToUI will handle its own increment/decrement
                                             saveCityList();
+                                            AppIdlingResource.decrement(); // Database query complete
                                         });
+                                    } else {
+                                        AppIdlingResource.decrement(); // Mark async operation complete
                                     }
+                                } else {
+                                    AppIdlingResource.decrement(); // Mark async operation complete
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
+                                AppIdlingResource.decrement(); // Mark async operation complete on error
                             }
                         }).start();
                     }

@@ -1,4 +1,5 @@
 package edu.uiuc.cs427app;
+
 import android.widget.ImageView;
 import android.os.Bundle;
 import android.view.View;
@@ -106,7 +107,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 Intent intent = new Intent(this, WeatherInsightsActivity.class);
                 intent.putExtra("city", cityName);
 
-                //dynamic theme support for weatherinsights
+                // dynamic theme support for weatherinsights
                 String username = getIntent().getStringExtra("username");
                 if (username != null) {
                     intent.putExtra("username", username);
@@ -179,6 +180,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
     // gets city name from database (ID)
     private void fetchCityFromDatabaseById(int cityId) {
+        AppIdlingResource.increment(); // Mark async operation start
         new Thread(() -> {
             try {
                 CityDao dao = DatabaseClient.getInstance(this).getAppDatabase().cityDao();
@@ -193,8 +195,9 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         }
                         cityTitleView.setText(cityName);
                         dateTimeView.setText(getFormattedCityDateTime(cityName));
+                        AppIdlingResource.decrement(); // Database query complete
                         if (cityLat != 0.0 || cityLng != 0.0) {
-                            fetchWeatherData();
+                            fetchWeatherData(); // fetchWeatherData will increment its own counter
                         } else {
                             showError("Coordinates not found for " + cityName);
                         }
@@ -202,11 +205,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 } else {
                     mainHandler.post(() -> {
                         showError("City not found in database with ID: " + cityId);
+                        AppIdlingResource.decrement(); // Mark async operation complete
                     });
                 }
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     showError("Failed to fetch city: " + e.getMessage());
+                    AppIdlingResource.decrement(); // Mark async operation complete
                 });
             }
         }).start();
@@ -214,6 +219,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
     // gets coordinates
     private void fetchCoordinatesFromDatabase() {
+        AppIdlingResource.increment(); // Mark async operation start
         new Thread(() -> {
             try {
                 CityDao dao = DatabaseClient.getInstance(this).getAppDatabase().cityDao();
@@ -223,8 +229,9 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     cityLat = city.getLat();
                     cityLng = city.getLng();
                     mainHandler.post(() -> {
+                        AppIdlingResource.decrement(); // Database query complete
                         if (cityLat != 0.0 || cityLng != 0.0) {
-                            fetchWeatherData();
+                            fetchWeatherData(); // fetchWeatherData will increment its own counter
                         } else {
                             showError("Coordinates not found for " + cityName);
                         }
@@ -232,11 +239,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 } else {
                     mainHandler.post(() -> {
                         showError("City not found in database: " + cityName);
+                        AppIdlingResource.decrement(); // Mark async operation complete
                     });
                 }
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     showError("Failed to fetch coordinates: " + e.getMessage());
+                    AppIdlingResource.decrement(); // Mark async operation complete
                 });
             }
         }).start();
@@ -266,6 +275,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
         Log.d(TAG, "Fetching weather for: " + cityName + " at (" + cityLat + ", " + cityLng + ")");
 
+        AppIdlingResource.increment(); // Mark network request start
         try {
             String url = "https://api.openweathermap.org/data/2.5/weather?lat=" +
                     cityLat +
@@ -283,14 +293,20 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 @Override
                 public void onFailure(Call call, IOException e) {
                     Log.e(TAG, "Network request failed", e);
-                    mainHandler.post(() -> showError("Failed to fetch weather data: " + e.getMessage()));
+                    mainHandler.post(() -> {
+                        showError("Failed to fetch weather data: " + e.getMessage());
+                        AppIdlingResource.decrement(); // Mark network request complete
+                    });
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     ResponseBody body = response.body();
                     if (body == null) {
-                        mainHandler.post(() -> showError("Empty response from server"));
+                        mainHandler.post(() -> {
+                            showError("Empty response from server");
+                            AppIdlingResource.decrement(); // Mark network request complete
+                        });
                         return;
                     }
 
@@ -302,23 +318,33 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         Log.e(TAG, "Unsuccessful response: " + response.code() + ", body: " + responseBody);
                         String errorMsg = "Failed to fetch weather data. Response code: " + response.code() + ". " +
                                 (responseBody.length() > 100 ? responseBody.substring(0, 100) : responseBody);
-                        mainHandler.post(() -> showError(errorMsg));
+                        mainHandler.post(() -> {
+                            showError(errorMsg);
+                            AppIdlingResource.decrement(); // Mark network request complete
+                        });
                         return;
                     }
 
                     try {
                         WeatherData weatherData = gson.fromJson(responseBody, WeatherData.class);
                         Log.d(TAG, "Parsed weather data successfully");
-                        mainHandler.post(() -> updateWeatherUI(weatherData));
+                        mainHandler.post(() -> {
+                            updateWeatherUI(weatherData);
+                            AppIdlingResource.decrement(); // Mark network request complete after UI update
+                        });
                     } catch (Exception e) {
                         Log.e(TAG, "Failed to parse weather data", e);
                         Log.e(TAG, "Response body was: " + responseBody);
-                        mainHandler.post(() -> showError("Failed to parse weather data: " + e.getMessage()));
+                        mainHandler.post(() -> {
+                            showError("Failed to parse weather data: " + e.getMessage());
+                            AppIdlingResource.decrement(); // Mark network request complete
+                        });
                     }
                 }
             });
         } catch (Exception e) {
             showError("Failed to create request: " + e.getMessage());
+            AppIdlingResource.decrement(); // Mark network request complete on error
         }
     }
 

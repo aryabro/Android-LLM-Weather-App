@@ -68,7 +68,7 @@ public class WeatherAwareView {
         }
         apiKey = apiKey.replace("\"", "").trim();
 
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-image:generateContent?key=" + apiKey;
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         RequestBody body = RequestBody.create(requestJson.toString(), JSON);
 
