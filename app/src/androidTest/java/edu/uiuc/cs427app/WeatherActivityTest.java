@@ -458,6 +458,63 @@ public class WeatherActivityTest {
     }
 
     /**
+     * Verify WeatherActivity can resolve a city solely by database ID and populate
+     * UI
+     * before network data returns.
+     */
+    @Test
+    public void testWeatherActivityLoadsCityFromDatabaseById() {
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), WeatherActivity.class);
+        intent.putExtra("cityId", 1); // Chicago inserted during setUp()
+
+        ActivityScenario<WeatherActivity> scenario = ActivityScenario.launch(intent);
+
+        // Wait for the DB lookup to finish and UI to update
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        onView(withId(R.id.weatherCityTitle))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Chicago")));
+
+        onView(withId(R.id.weatherDateTime))
+                .check(matches(isDisplayed()))
+                .check(matches(not(withText("Loading..."))));
+
+        scenario.close();
+    }
+
+    /**
+     * Verify WeatherActivity surfaces errors when coordinates cannot be fetched.
+     */
+    @Test
+    public void testWeatherActivityShowsErrorForUnknownCity() {
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), WeatherActivity.class);
+        intent.putExtra("city", "UnknownCity");
+        intent.putExtra("username", "testUser");
+
+        ActivityScenario<WeatherActivity> scenario = ActivityScenario.launch(intent);
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        onView(withId(R.id.weatherError))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("City not found in database: UnknownCity")));
+
+        onView(withId(R.id.weatherTemperature))
+                .check(matches(withText("Error")));
+
+        scenario.close();
+    }
+
+    /**
      * verify multiple city switching
      * simulate user: click city1 (Chicago) -> return -> click city2 (New York) ->
      * return -> click city1 (Chicago)
