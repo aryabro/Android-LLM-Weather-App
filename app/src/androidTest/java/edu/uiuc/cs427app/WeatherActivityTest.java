@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
@@ -46,10 +48,13 @@ import org.hamcrest.TypeSafeMatcher;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.not;
 
+import com.google.gson.Gson;
+
 @RunWith(AndroidJUnit4.class)
 public class WeatherActivityTest {
 
     private CityDao cityDao;
+    private final Gson gson = new Gson();
 
     /**
      * Custom matcher to find a WEATHER button that is in the same container as a
@@ -510,6 +515,82 @@ public class WeatherActivityTest {
 
         onView(withId(R.id.weatherTemperature))
                 .check(matches(withText("Error")));
+
+        scenario.close();
+    }
+
+    /**
+     * verify fetchWeatherData surfaces error when coordinates are invalid
+     */
+    @Test
+    public void testFetchWeatherDataShowsErrorForInvalidCoordinates() {
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), WeatherActivity.class);
+        intent.putExtra("city", "Chicago");
+        intent.putExtra("lat", 41.8781);
+        intent.putExtra("lng", -87.6298);
+        intent.putExtra("username", "testUser");
+
+        ActivityScenario<WeatherActivity> scenario = ActivityScenario.launch(intent);
+
+        scenario.onActivity(activity -> {
+            try {
+                Field latField = WeatherActivity.class.getDeclaredField("cityLat");
+                Field lngField = WeatherActivity.class.getDeclaredField("cityLng");
+                latField.setAccessible(true);
+                lngField.setAccessible(true);
+                latField.set(activity, 0.0);
+                lngField.set(activity, 0.0);
+
+                Method fetchMethod = WeatherActivity.class.getDeclaredMethod("fetchWeatherData");
+                fetchMethod.setAccessible(true);
+                fetchMethod.invoke(activity);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        onView(withId(R.id.weatherError))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Invalid coordinates for Chicago (lat: 0.0, lng: 0.0)")));
+
+        onView(withId(R.id.weatherTemperature))
+                .check(matches(withText("Error")));
+
+        scenario.close();
+    }
+
+    /**
+     * verify updateWeatherUI gracefully handles missing weather sections
+     */
+    @Test
+    public void testUpdateWeatherUIHandlesMissingData() {
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), WeatherActivity.class);
+        intent.putExtra("city", "Chicago");
+        intent.putExtra("lat", 41.8781);
+        intent.putExtra("lng", -87.6298);
+        intent.putExtra("username", "testUser");
+
+        ActivityScenario<WeatherActivity> scenario = ActivityScenario.launch(intent);
+
+        scenario.onActivity(activity -> {
+            try {
+                WeatherData data = gson.fromJson("{\"weather\":[]}", WeatherData.class);
+                Method updateMethod = WeatherActivity.class.getDeclaredMethod("updateWeatherUI", WeatherData.class);
+                updateMethod.setAccessible(true);
+                updateMethod.invoke(activity, data);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        onView(withId(R.id.weatherTemperature))
+                .check(matches(withText("N/A")));
+        onView(withId(R.id.weatherCondition))
+                .check(matches(withText("N/A")));
+        onView(withId(R.id.weatherHumidity))
+                .check(matches(withText("N/A")));
+        onView(withId(R.id.weatherWind))
+                .check(matches(withText("N/A")));
 
         scenario.close();
     }
