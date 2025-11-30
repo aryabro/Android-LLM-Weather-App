@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.time.Clock;
 
 import android.content.Intent;
 import android.os.Handler;
@@ -51,6 +52,12 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Gson gson;
     private Handler mainHandler;
     private WeatherData currentWeatherData;
+
+    private Clock clock = Clock.systemDefaultZone();
+
+    public void setClock(Clock testClock) {
+        this.clock = testClock;
+    }
 
     // creates weather activity
     @Override
@@ -395,7 +402,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             }
 
             // Figure out approximate time of day
-            java.time.LocalTime now = java.time.LocalTime.now();
+            java.time.LocalTime now = java.time.LocalTime.now(clock);
             String timeOfDay;
             if (now.isBefore(java.time.LocalTime.NOON)) {
                 timeOfDay = "morning";

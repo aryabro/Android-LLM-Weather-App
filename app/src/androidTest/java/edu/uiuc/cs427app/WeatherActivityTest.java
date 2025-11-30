@@ -19,6 +19,9 @@ import java.util.Map;
 import java.time.ZoneId;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.time.Clock;
+import java.time.LocalTime;
+import java.time.LocalDate;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
@@ -611,6 +614,34 @@ public class WeatherActivityTest {
         scenario.close();
     }
 
+    @Test
+    public void testUpdateWeatherUI_NullWeatherData_ShowsError() {
+        // 启动 Activity
+        Intent intent = new Intent(
+                ApplicationProvider.getApplicationContext(),
+                WeatherActivity.class
+        );
+        ActivityScenario<WeatherActivity> scenario = ActivityScenario.launch(intent);
+
+        scenario.onActivity(activity -> {
+            try {
+                // 反射调用私有方法 updateWeatherUI
+                Method method = WeatherActivity.class.getDeclaredMethod("updateWeatherUI", WeatherData.class);
+                method.setAccessible(true);
+
+                // 传入 null → 触发你要测试的分支
+                method.invoke(activity, (WeatherData) null);
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        // Espresso 检查 UI 是否显示 error message
+        onView(withText("No weather data received"))
+                .check(matches(isDisplayed()));
+    }
+
     /**
      * Test updateWeatherUI with empty weather condition string
      * Covers empty string check in updateWeatherUI
@@ -765,7 +796,7 @@ public class WeatherActivityTest {
      * This helps cover the time-based logic in updateWeatherUI
      */
     @Test
-    public void testUpdateWeatherUITimeOfDayBranches() {
+    public void testUpdateWeatherUITimeOfDayBranchesMorning() {
         Intent intent = new Intent(ApplicationProvider.getApplicationContext(), WeatherActivity.class);
         intent.putExtra("city", "Chicago");
         intent.putExtra("lat", 41.8781);
@@ -778,6 +809,12 @@ public class WeatherActivityTest {
         // one
         scenario.onActivity(activity -> {
             try {
+                LocalTime nineAm = LocalTime.of(9, 0);
+                ZoneId zone = ZoneId.systemDefault();
+                Clock fixedClock = Clock.fixed(nineAm.atDate(LocalDate.now()).atZone(zone).toInstant(), zone);
+    
+                activity.setClock(fixedClock);
+
                 String json = "{"
                         + "\"main\":{\"temp\":22.5,\"humidity\":55},"
                         + "\"weather\":[{\"main\":\"Clear\",\"description\":\"clear sky\"}],"
@@ -788,6 +825,105 @@ public class WeatherActivityTest {
                 Method updateMethod = WeatherActivity.class.getDeclaredMethod("updateWeatherUI", WeatherData.class);
                 updateMethod.setAccessible(true);
                 updateMethod.invoke(activity, data);
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Verify UI was updated
+        onView(withId(R.id.weatherTemperature))
+                .check(matches(isDisplayed()));
+
+        scenario.close();
+    }
+
+    @Test
+    public void testUpdateWeatherUITimeOfDayBranchesAfternoon() {
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), WeatherActivity.class);
+        intent.putExtra("city", "Chicago");
+        intent.putExtra("lat", 41.8781);
+        intent.putExtra("lng", -87.6298);
+
+        ActivityScenario<WeatherActivity> scenario = ActivityScenario.launch(intent);
+
+        // This will trigger the timeOfDay logic which checks current time
+        // The actual branch depends on when the test runs, but it should cover at least
+        // one
+        scenario.onActivity(activity -> {
+            try {
+                LocalTime threePm = LocalTime.of(15, 0);
+                ZoneId zone = ZoneId.systemDefault();
+                Clock fixedClock = Clock.fixed(threePm.atDate(LocalDate.now()).atZone(zone).toInstant(), zone);
+    
+                activity.setClock(fixedClock);
+
+                String json = "{"
+                        + "\"main\":{\"temp\":22.5,\"humidity\":55},"
+                        + "\"weather\":[{\"main\":\"Clear\",\"description\":\"clear sky\"}],"
+                        + "\"wind\":{\"speed\":3.2,\"deg\":180}"
+                        + "}";
+                WeatherData data = gson.fromJson(json, WeatherData.class);
+
+                Method updateMethod = WeatherActivity.class.getDeclaredMethod("updateWeatherUI", WeatherData.class);
+                updateMethod.setAccessible(true);
+                updateMethod.invoke(activity, data);
+                
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Verify UI was updated
+        onView(withId(R.id.weatherTemperature))
+                .check(matches(isDisplayed()));
+
+        scenario.close();
+    }
+
+    @Test
+    public void testUpdateWeatherUITimeOfDayBranchesEvening() {
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), WeatherActivity.class);
+        intent.putExtra("city", "Chicago");
+        intent.putExtra("lat", 41.8781);
+        intent.putExtra("lng", -87.6298);
+
+        ActivityScenario<WeatherActivity> scenario = ActivityScenario.launch(intent);
+
+        // This will trigger the timeOfDay logic which checks current time
+        // The actual branch depends on when the test runs, but it should cover at least
+        // one
+        scenario.onActivity(activity -> {
+            try {
+                LocalTime ninePm = LocalTime.of(21, 0);
+                ZoneId zone = ZoneId.systemDefault();
+                Clock fixedClock = Clock.fixed(ninePm.atDate(LocalDate.now()).atZone(zone).toInstant(), zone);
+    
+                activity.setClock(fixedClock);
+
+                String json = "{"
+                        + "\"main\":{\"temp\":22.5,\"humidity\":55},"
+                        + "\"weather\":[{\"main\":\"Clear\",\"description\":\"clear sky\"}],"
+                        + "\"wind\":{\"speed\":3.2,\"deg\":180}"
+                        + "}";
+                WeatherData data = gson.fromJson(json, WeatherData.class);
+
+                Method updateMethod = WeatherActivity.class.getDeclaredMethod("updateWeatherUI", WeatherData.class);
+                updateMethod.setAccessible(true);
+                updateMethod.invoke(activity, data);
+                
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
