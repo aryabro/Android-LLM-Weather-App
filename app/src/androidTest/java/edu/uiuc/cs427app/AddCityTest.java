@@ -7,24 +7,25 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.*;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.*;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
-public class CityAddTest {
+public class AddCityTest {
 
     @Rule
     public ActivityScenarioRule<MainActivity> rule =
             new ActivityScenarioRule<>(MainActivity.class);
 
     @Test
-    public void testAddCity_validCity_addsToList() throws InterruptedException {
+    public void testAddCity() throws InterruptedException {
 
         // 1. Click the "Add Location" button
         onView(withId(R.id.buttonAddLocation)).perform(click());
@@ -47,5 +48,30 @@ public class CityAddTest {
 
         // 6. ASSERT: Chicago is visible in the city list (locationContainer)
         onView(withText("Chicago")).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testRemoveCity() throws InterruptedException {
+        // 1. Confirm Chicago is displayed before removal
+        onView(withText("Chicago")).check(matches(isDisplayed()));
+
+        // 2. Click the delete button for the Chicago row
+        onView(allOf(
+                withText("REMOVE"),                       // remove button
+                hasSibling(withText("Chicago"))           // inside the same row as the city
+        )).perform(click());
+        Thread.sleep(600);
+
+        // 3. Confirm deletion (dialog)
+        onView(withText("Delete")).perform(click());
+        Thread.sleep(1500);
+
+        // 4. OPTIONAL: Close success dialog
+        onView(withText("OK")).perform(click());
+        Thread.sleep(600);
+
+        // 5. ASSERT: Chicago no longer appears in the list
+        onView(withText("Chicago")).check(doesNotExist());
+        Thread.sleep(600);
     }
 }
