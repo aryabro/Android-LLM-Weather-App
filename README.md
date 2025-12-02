@@ -206,7 +206,7 @@ Meeting notes: Explain the overall team progress and a summary of discussion
 | NetID          | Progress from last week         | Tasks for next week   |
 | ---------------| --------------------------------| ----------------------|
 | zhenbi2               | Working on Testing the weather feature for two 2 cities                                 | Record demo video                      |
-| nk46               |  Working on LLM signup                               |                       | Record demo video   
+| nk46               |  Working on LLM signup                               |  Record demo video                        | 
 | sabelle2               |  Working on  testing the removal of an existing city                               |   Record demo video                        |
 | diveya2               |    Working on Mocking location Test                             |   Record demo video                        |
 | nasare2               |    Testing weather insight feature                             |    Record demo video                       |
