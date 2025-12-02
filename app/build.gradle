@@ -77,52 +77,15 @@ dependencies {
     // JSON parsing
     implementation 'com.google.code.gson:gson:2.10.1'
 
-    // Testing
+    // Test dependencies
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.7.0'
-}
 
-// JaCoCo configuration for code coverage
-jacoco {
-    toolVersion = "0.8.11"
-}
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
 
-tasks.register('jacocoTestReport', JacocoReport) {
-    dependsOn 'connectedDebugAndroidTest'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
 
-    group = "Reporting"
-    description = "Generate JaCoCo coverage reports for the debug build."
-
-    reports {
-        xml.required = true
-        html.required = true
-        html.outputLocation = layout.buildDirectory.dir("reports/jacoco")
-    }
-
-    def fileFilter = [
-            '**/R.class',
-            '**/R$*.class',
-            '**/BuildConfig.*',
-            '**/Manifest*.*',
-            '**/*Test*.*',
-            'android/**/*.*',
-            '**/*$ViewInjector*.*',
-            '**/*$ViewBinder*.*',
-            '**/databinding/*',
-            '**/android/databinding/*',
-            '**/androidx/databinding/*',
-            '**/BR.*'
-    ]
-
-    def mainSrc = "${project.projectDir}/src/main/java"
-    def debugTree = fileTree(dir: "${buildDir}/intermediates/javac/debug/classes", excludes: fileFilter)
-    def kotlinDebugTree = fileTree(dir: "${buildDir}/tmp/kotlin-classes/debug", excludes: fileFilter)
-
-    sourceDirectories.setFrom(files([mainSrc]))
-    classDirectories.setFrom(files([debugTree, kotlinDebugTree]))
-    executionData.setFrom(fileTree(dir: "$buildDir", includes: [
-            "outputs/code_coverage/debugAndroidTest/connected/**/*.ec"
-    ]))
 }
