@@ -33,9 +33,36 @@ public class RemoveCityTest {
 
     private Context context;
 
-    // prepopulates chicago into citylist for testing
     @Before
-    public void setup() throws InterruptedException {
+    //  clear db bfore every test
+    public void clearState() throws InterruptedException {
+        final Object lock = new Object();
+
+        rule.getScenario().onActivity(activity -> {
+            context = activity;
+
+            new Thread(() -> {
+                // 1. Clear Room DB
+                DatabaseClient.getInstance(context)
+                        .getAppDatabase()
+                        .clearAllTables();
+
+                // 2. Clear SharedPreferences
+                context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+                        .edit()
+                        .clear()
+                        .commit();
+
+                synchronized (lock) { lock.notify(); }
+            }).start();
+        });
+
+        synchronized (lock) { lock.wait(); }
+    }
+
+    @Before
+    // prepopulates chicago into citylist for testing
+    public void prepopulate() throws InterruptedException {
         final Object lock = new Object();
 
         rule.getScenario().onActivity(activity -> {
@@ -43,11 +70,14 @@ public class RemoveCityTest {
 
             new Thread(() -> {
                 // Insert city in background thread
-                City chicago = new City("Chicago", 41.8781, -87.6298, "USA", "US", "USA", "", 1);
-                DatabaseClient.getInstance(context).getAppDatabase().cityDao().insert(chicago);
+                City chicago = new City("Chicago", 41.8781, -87.6298, "USA", "US", "USA", "", 0);
+                long id = DatabaseClient.getInstance(context)
+                        .getAppDatabase()
+                        .cityDao()
+                        .insert(chicago);
 
-                // Now update UI on main thread
-                activity.runOnUiThread(() -> activity.addCityToUI(chicago.getId()));
+                // update UI on main thread
+                activity.runOnUiThread(() -> activity.addCityToUI((int) id));
 
                 // Notify that setup is done
                 synchronized (lock) {
@@ -60,6 +90,7 @@ public class RemoveCityTest {
         synchronized (lock) {
             lock.wait();
         }
+        Thread.sleep(500);
     }
 
 

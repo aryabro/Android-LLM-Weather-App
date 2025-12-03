@@ -18,7 +18,7 @@ public interface CityDao {
 
     // Inserts a single city
     @Insert
-    void insert(City city);
+    long insert(City city);
 
 
     // Finds a city by its name (case-insensitive).

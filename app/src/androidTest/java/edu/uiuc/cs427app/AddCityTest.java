@@ -49,29 +49,4 @@ public class AddCityTest {
         // 6. ASSERT: Chicago is visible in the city list (locationContainer)
         onView(withText("Chicago")).check(matches(isDisplayed()));
     }
-
-    @Test
-    public void testRemoveCity() throws InterruptedException {
-        // 1. Confirm Chicago is displayed before removal
-        onView(withText("Chicago")).check(matches(isDisplayed()));
-
-        // 2. Click the delete button for the Chicago row
-        onView(allOf(
-                withText("REMOVE"),                       // remove button
-                hasSibling(withText("Chicago"))           // inside the same row as the city
-        )).perform(click());
-        Thread.sleep(600);
-
-        // 3. Confirm deletion (dialog)
-        onView(withText("Delete")).perform(click());
-        Thread.sleep(1500);
-
-        // 4. OPTIONAL: Close success dialog
-        onView(withText("OK")).perform(click());
-        Thread.sleep(600);
-
-        // 5. ASSERT: Chicago no longer appears in the list
-        onView(withText("Chicago")).check(doesNotExist());
-        Thread.sleep(600);
-    }
 }
