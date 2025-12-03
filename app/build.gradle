@@ -47,6 +47,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    
+    // Enable test coverage
+    testOptions {
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+                excludes = ['jdk.internal.*']
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -79,13 +89,143 @@ dependencies {
 
     // Test dependencies
     testImplementation 'junit:junit:4.13.2'
-
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-idling-resource:3.7.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.7.0'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
     androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
 
-    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
+}
 
+// JaCoCo configuration
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
+}
+
+// Task to generate HTML coverage report for instrumented tests
+task jacocoTestReport(type: JacocoReport, dependsOn: ['connectedDebugAndroidTest']) {
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    def fileFilter = [
+        '**/R.class',
+        '**/R$*.class',
+        '**/BuildConfig.*',
+        '**/Manifest*.*',
+        '**/*Test*.*',
+        'android/**/*.*',
+        '**/databinding/**',
+        '**/androidx/**',
+        '**/com/google/**',
+        '**/okhttp3/**',
+        '**/gson/**',
+        '**/room/**'
+    ]
+
+    def debugTree = fileTree(dir: "${buildDir}/intermediates/javac/debug", excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files([mainSrc]))
+    classDirectories.setFrom(files([debugTree]))
+    executionData.setFrom(fileTree(dir: "${buildDir}/outputs", includes: [
+        'code_coverage/**/*.ec'
+    ]))
+
+    // If no coverage data is found, create empty report
+    doLast {
+        if (!executionData.files || executionData.files.isEmpty()) {
+            println "Warning: No coverage data found. Make sure you run connectedDebugAndroidTest first."
+        }
+    }
+}
+
+// Task to generate coverage report after running tests
+// This task can work even without running tests first (if coverage data exists)
+task jacocoTestReportAndroid(type: JacocoReport) {
+    // Make this task optional - don't fail if tests haven't run
+    // You can run tests separately: ./gradlew connectedDebugAndroidTest
+    // Then generate report: ./gradlew jacocoTestReportAndroid
+    
+    reports {
+        xml.required = true
+        html.required = true
+        html.outputLocation = file("${buildDir}/reports/jacoco/jacocoTestReportAndroid/html")
+        xml.outputLocation = file("${buildDir}/reports/jacoco/jacocoTestReportAndroid/jacocoTestReportAndroid.xml")
+    }
+
+    def fileFilter = [
+        '**/R.class',
+        '**/R$*.class',
+        '**/BuildConfig.*',
+        '**/Manifest*.*',
+        '**/*Test*.*',
+        'android/**/*.*',
+        '**/databinding/**',
+        '**/androidx/**',
+        '**/com/google/**',
+        '**/okhttp3/**',
+        '**/gson/**',
+        '**/room/**'
+    ]
+
+    def debugTree = fileTree(dir: "${buildDir}/intermediates/javac/debug", excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files([mainSrc]))
+    classDirectories.setFrom(files([debugTree]))
+    
+    // Get coverage data from connected tests
+    // Android instrumented tests store coverage data in outputs/code_coverage/
+    def coverageDataDirs = [
+        "${buildDir}/outputs/code_coverage/debugAndroidTest/connected",
+        "${buildDir}/outputs/code_coverage"
+    ]
+    
+    def coverageFiles = files(coverageDataDirs.collect { dir ->
+        fileTree(dir: dir, includes: ['**/*.ec', '**/*.exec'])
+    })
+    
+    executionData.setFrom(coverageFiles)
+    
+    doFirst {
+        println "Looking for coverage data in:"
+        coverageDataDirs.each { dir ->
+            println "  - ${dir}"
+        }
+    }
+    
+    // Make the task not fail if no coverage data exists
+    onlyIf {
+        // Always try to generate report, even if no data exists
+        true
+    }
+    
+    doLast {
+        if (executionData.files && !executionData.files.isEmpty()) {
+            println "\n✅ JaCoCo HTML report generated at:"
+            println "   ${reports.html.outputLocation}/index.html"
+            println "\n✅ JaCoCo XML report generated at:"
+            println "   ${reports.xml.outputLocation}"
+            println "\n📊 Open the HTML report in your browser to view coverage details."
+        } else {
+            println "\n⚠️  Warning: No coverage data found."
+            println "   To generate coverage data:"
+            println "   1. Connect an Android device or start an emulator"
+            println "   2. Run: ./gradlew connectedDebugAndroidTest"
+            println "   3. Then run: ./gradlew jacocoTestReportAndroid"
+            println "   Coverage data should be in: ${buildDir}/outputs/code_coverage/"
+        }
+    }
 }
