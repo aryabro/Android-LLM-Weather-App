@@ -179,39 +179,40 @@ Meeting notes: Wrapped up Iteration 4 for the Android app (weather page, insight
 
 <b>Project Week 8</b>
 </br>
-Members present: List the NetID of the people who attended the meeting
+Members present: zhenbi2, nk46, sabelle2, diveya2, nasare2, satejrs2, yuangc3
 </br>
-Meeting notes: Explain the overall team progress and a summary of discussion
+Meeting notes:Everyone finished up their part to Iteration 4 of the Android Project and performed some testing for the 4 Credit Project. 
+We distributed our work individually. Hope we can have a great Thanksgiving! 
 </br>
 | NetID          | Progress from last week         | Tasks for next week   |
 | ---------------| --------------------------------| ----------------------|
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
+|  zhenbi2              |      Finishing recording the Demo                           | Working on Testing the weather feature                       |
+|  aaroncl2              |   Finishing recording the Demo                              | Working on Testing the location feature                       |
+|   sabelle2             |   Finishing recording the Demo                              | Working on Testing the removal of an existing city                      |
+|  diveya2              |    Finishing recording the Demo                             |  Working on Mocking location test                     |
+|   nasare2             |   Finishing recording the Demo                             |   Working on  Testing the “Weather Insight” feature                   |
+|   satejrs2             |  Finishing recording the Demo                               |  Working on Testing user login with LLM-generated tests and log-off                   |
+|   yuangc3             |   Finishing recording the Demo                              |   Working on Testing the addition of a new city                   |
+|  nk46              |     Finishing recording the Demo                            |    Working on Testing user sign-up with LLM-generated tests                  |
 </br>
 
 
 <b>Project Week 9</b>
 </br>
-Members present: List the NetID of the people who attended the meeting
+Members present: zhenbi2, nk46, sabelle2, diveya2, nasare2, satejrs2, yuangc3,aaroncl2
 </br>
 Meeting notes: Explain the overall team progress and a summary of discussion
 </br>
 | NetID          | Progress from last week         | Tasks for next week   |
 | ---------------| --------------------------------| ----------------------|
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
-|                |                                 |                       |
+| zhenbi2               | Working on Testing the weather feature for two 2 cities                                 | Record demo video                      |
+| nk46               |  Working on LLM signup                               |  Record demo video                        | 
+| sabelle2               |  Working on  testing the removal of an existing city                               |   Record demo video                        |
+| diveya2               |    Working on Mocking location Test                             |   Record demo video                        |
+| nasare2               |    Testing weather insight feature                             |    Record demo video                       |
+| satejrs2               |Working on testing user login with LLM                                 |    Record demo video                       |
+| yuangc3               | Working on  testing addition of a new city                                |     Record demo video                      |
+| aaroncl2               | Working on Testing the location feature for two cities                                 |     Record demo video                      |
 </br>
 
 

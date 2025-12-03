@@ -16,6 +16,11 @@ public interface CityDao {
     @Insert
     void insertAll(List<City> cities);
 
+    // Inserts a single city
+    @Insert
+    long insert(City city);
+
+
     // Finds a city by its name (case-insensitive).
     @Query("SELECT * FROM cities WHERE LOWER(city) = LOWER(:name)")
     List<City> findAllByName(String name);

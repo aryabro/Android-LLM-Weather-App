@@ -375,7 +375,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     // Dynamically add a city entry (name + WEATHER + MAP + REMOVE buttons) to the
     // UI
-    private void addCityToUI(int cityId) {
+    public void addCityToUI(int cityId) {
         // Fetch city information from database in background thread
         AppIdlingResource.increment(); // Mark async operation start
         new Thread(() -> {
@@ -506,6 +506,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         // REMOVE button
         Button removeButton = new Button(this);
+        removeButton.setId(R.id.removeButton);
         removeButton.setBackground(removeButtonShape);
         removeButton.setTypeface(null, Typeface.BOLD);
         removeButton.setText("REMOVE");

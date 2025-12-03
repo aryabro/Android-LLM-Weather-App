@@ -8,6 +8,15 @@ if (rootProject.file('local.properties').exists()) {
     properties.load(rootProject.file('local.properties').newDataInputStream())
 }
 
+// Helper function to remove quotes from property values
+def getPropertyWithoutQuotes(Properties props, String key) {
+    def value = props.getProperty(key)
+    if (value != null && value.startsWith('"') && value.endsWith('"')) {
+        return value.substring(1, value.length() - 1)
+    }
+    return value
+}
+
 android {
     namespace "edu.uiuc.cs427app"
     compileSdk 34
@@ -20,8 +29,8 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField "String", "GEMINI_API_KEY", "\"${properties.getProperty('GEMINI_API_KEY')}\""
-        buildConfigField "String", "OPENWEATHER_API_KEY", "\"${properties.getProperty('OPENWEATHER_API_KEY')}\""
+        buildConfigField "String", "GEMINI_API_KEY", "\"${getPropertyWithoutQuotes(properties, 'GEMINI_API_KEY')}\""
+        buildConfigField "String", "OPENWEATHER_API_KEY", "\"${getPropertyWithoutQuotes(properties, 'OPENWEATHER_API_KEY')}\""
     }
     /* if you see lint error, add this back */
     lint {
@@ -78,7 +87,7 @@ dependencies {
     // JSON parsing
     implementation 'com.google.code.gson:gson:2.10.1'
 
-    // Testing
+    // Test dependencies
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
@@ -88,6 +97,8 @@ dependencies {
     androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
     androidTestImplementation 'androidx.test:rules:1.5.0'
     androidTestImplementation 'androidx.test:runner:1.5.2'
+
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
 }
 
 // JaCoCo configuration
