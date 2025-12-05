@@ -1468,193 +1468,180 @@ public class WeatherActivityTest {
 
         scenario.close();
     }
-//
-//    /**
-//     * Test that main page with two cities (Chicago and New York) can show weather
-//     * info
-//     * with assertions for both cities
-//     */
-//    @Test
-//    public void testMainPageWithTwoCitiesShowsWeatherInfo() {
-//        // Start MainActivity with both cities (Chicago ID=1, New York ID=2)
-//        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), MainActivity.class);
-//        intent.putExtra("username", "testUser");
-//        intent.putExtra(LoginActivity.KEY_CITY_LIST, "1,2"); // Chicago and New York
-//
-//        ActivityScenario<MainActivity> scenario = ActivityScenario.launch(intent);
-//
-//        // Wait for UI to load
-//        try {
-//            Thread.sleep(3000); // Wait for cities to be loaded and displayed
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Assert: Verify both cities are displayed on main page
-//        onView(withText("Chicago"))
-//                .check(matches(isDisplayed()));
-//        onView(withText("New York"))
-//                .check(matches(isDisplayed()));
-//
-//        // Assert: Verify WEATHER buttons exist for both cities
-//        onView(weatherButtonForCity("Chicago"))
-//                .check(matches(isDisplayed()))
-//                .check(matches(isEnabled()));
-//        onView(weatherButtonForCity("New York"))
-//                .check(matches(isDisplayed()))
-//                .check(matches(isEnabled()));
-//
-//        // Test Chicago weather
-//        // Click WEATHER button for Chicago
-//        onView(weatherButtonForCity("Chicago"))
-//                .perform(click());
-//
-//        // Wait for WeatherActivity to load
-//        try {
-//            Thread.sleep(3000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Assert: Verify WeatherActivity is started for Chicago
-//        intended(hasComponent(WeatherActivity.class.getName()));
-//        intended(allOf(
-//                hasExtra("city", "Chicago"),
-//                hasExtra("lat", 41.8781),
-//                hasExtra("lng", -87.6298),
-//                hasExtra("username", "testUser")));
-//
-//        // Wait for weather data to load
-//        try {
-//            Thread.sleep(5000); // Wait for API response
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Assert: Verify Chicago weather information is displayed
-//        onView(withId(R.id.weatherCityTitle))
-//                .check(matches(isDisplayed()))
-//                .check(matches(withText("Chicago")));
-//
-//        onView(withId(R.id.weatherDateTime))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText(""))))
-//                .check(matches(not(withText("Loading..."))));
-//
-//        onView(withId(R.id.weatherTemperature))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText("N/A"))))
-//                .check(matches(not(withText("Error"))));
-//
-//        onView(withId(R.id.weatherCondition))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText("N/A"))))
-//                .check(matches(not(withText("Error"))));
-//
-//        onView(withId(R.id.weatherHumidity))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText("N/A"))))
-//                .check(matches(not(withText("Error"))));
-//
-//        // Scroll to wind condition if needed
-//        try {
-//            onView(withId(R.id.weatherWind))
-//                    .perform(scrollTo())
-//                    .check(matches(isDisplayed()))
-//                    .check(matches(not(withText("N/A"))))
-//                    .check(matches(not(withText("Error"))));
-//        } catch (Exception e) {
-//            // If scroll fails, just check if it exists
-//            onView(withId(R.id.weatherWind))
-//                    .check(matches(isDisplayed()))
-//                    .check(matches(not(withText("N/A"))))
-//                    .check(matches(not(withText("Error"))));
-//        }
-//
-//        // Press back to return to MainActivity
-//        pressBack();
-//
-//        // Wait for MainActivity to be visible again
-//        try {
-//            Thread.sleep(2000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Assert: Verify we're back on MainActivity with both cities still displayed
-//        onView(withText("Chicago"))
-//                .check(matches(isDisplayed()));
-//        onView(withText("New York"))
-//                .check(matches(isDisplayed()));
-//
-//        // Test New York weather
-//        // Click WEATHER button for New York
-//        onView(weatherButtonForCity("New York"))
-//                .perform(click());
-//
-//        // Wait for WeatherActivity to load
-//        try {
-//            Thread.sleep(3000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Assert: Verify WeatherActivity is started for New York
-//        intended(hasComponent(WeatherActivity.class.getName()));
-//        intended(allOf(
-//                hasExtra("city", "New York"),
-//                hasExtra("lat", 40.7128),
-//                hasExtra("lng", -74.0060),
-//                hasExtra("username", "testUser")));
-//
-//        // Wait for weather data to load
-//        try {
-//            Thread.sleep(5000); // Wait for API response
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Assert: Verify New York weather information is displayed
-//        onView(withId(R.id.weatherCityTitle))
-//                .check(matches(isDisplayed()))
-//                .check(matches(withText("New York")));
-//
-//        onView(withId(R.id.weatherDateTime))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText(""))))
-//                .check(matches(not(withText("Loading..."))));
-//
-//        onView(withId(R.id.weatherTemperature))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText("N/A"))))
-//                .check(matches(not(withText("Error"))));
-//
-//        onView(withId(R.id.weatherCondition))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText("N/A"))))
-//                .check(matches(not(withText("Error"))));
-//
-//        onView(withId(R.id.weatherHumidity))
-//                .check(matches(isDisplayed()))
-//                .check(matches(not(withText("N/A"))))
-//                .check(matches(not(withText("Error"))));
-//
-//        // Scroll to wind condition if needed
-//        try {
-//            onView(withId(R.id.weatherWind))
-//                    .perform(scrollTo())
-//                    .check(matches(isDisplayed()))
-//                    .check(matches(not(withText("N/A"))))
-//                    .check(matches(not(withText("Error"))));
-//        } catch (Exception e) {
-//            // If scroll fails, just check if it exists
-//            onView(withId(R.id.weatherWind))
-//                    .check(matches(isDisplayed()))
-//                    .check(matches(not(withText("N/A"))))
-//                    .check(matches(not(withText("Error"))));
-//        }
-//
-//        scenario.close();
-//    }
+
+    /**
+     * Test that main page with two cities (Chicago and New York) can show weather
+     * info
+     * with assertions for both cities
+     */
+    @Test
+    public void testMainPageWithTwoCitiesShowsWeatherInfo() {
+        // Start MainActivity with both cities (Chicago ID=1, New York ID=2)
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), MainActivity.class);
+        intent.putExtra("username", "testUser");
+        intent.putExtra(LoginActivity.KEY_CITY_LIST, "1,2"); // Chicago and New York
+
+        ActivityScenario<MainActivity> scenario = ActivityScenario.launch(intent);
+
+        // Wait for UI to load
+        try {
+            Thread.sleep(3000); // Wait for cities to be loaded and displayed
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Assert: Verify both cities are displayed on main page
+        onView(withText("Chicago"))
+                .check(matches(isDisplayed()));
+        onView(withText("New York"))
+                .check(matches(isDisplayed()));
+
+        // Assert: Verify WEATHER buttons exist for both cities
+        onView(weatherButtonForCity("Chicago"))
+                .check(matches(isDisplayed()))
+                .check(matches(isEnabled()));
+        onView(weatherButtonForCity("New York"))
+                .check(matches(isDisplayed()))
+                .check(matches(isEnabled()));
+
+        // Test Chicago weather
+        // Click WEATHER button for Chicago
+        onView(weatherButtonForCity("Chicago"))
+                .perform(click());
+
+        // Wait for WeatherActivity to load
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Assert: Verify WeatherActivity is started for Chicago
+        intended(hasComponent(WeatherActivity.class.getName()));
+        intended(allOf(
+                hasExtra("city", "Chicago"),
+                hasExtra("lat", 41.8781),
+                hasExtra("lng", -87.6298),
+                hasExtra("username", "testUser")));
+
+        // Wait for weather data to load
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Assert: Verify Chicago weather information is displayed
+        onView(withId(R.id.weatherCityTitle))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Chicago")));
+
+        onView(withId(R.id.weatherDateTime))
+                .check(matches(isDisplayed()))
+                .check(matches(not(withText(""))));
+
+        onView(withId(R.id.weatherTemperature))
+                .check(matches(isDisplayed()));
+
+        onView(withId(R.id.weatherCondition))
+                .check(matches(isDisplayed()));
+
+        onView(withId(R.id.weatherHumidity))
+                .check(matches(isDisplayed()));
+
+        // Scroll to wind condition if needed
+        try {
+            onView(withId(R.id.weatherWind))
+                    .perform(scrollTo())
+                    .check(matches(isDisplayed()));
+        } catch (Exception e) {
+            // If scroll fails, just check if it exists
+            onView(withId(R.id.weatherWind))
+                    .check(matches(isDisplayed()));
+        }
+
+        // Press back to return to MainActivity
+        pressBack();
+
+        // Wait for MainActivity to be visible again
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Clear intent records before testing New York to avoid matching multiple intents
+        Intents.release();
+        Intents.init();
+
+        // Test New York weather
+        // Click WEATHER button for New York
+        onView(weatherButtonForCity("New York"))
+                .perform(click());
+
+        // Wait for WeatherActivity to load
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Assert: Verify WeatherActivity is started for New York
+        intended(hasComponent(WeatherActivity.class.getName()));
+        intended(allOf(
+                hasExtra("city", "New York"),
+                hasExtra("lat", 40.7128),
+                hasExtra("lng", -74.0060),
+                hasExtra("username", "testUser")));
+
+        // Wait for weather data to load
+        try {
+            Thread.sleep(5000); // Wait for API response
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Assert: Verify New York weather information is displayed
+        onView(withId(R.id.weatherCityTitle))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("New York")));
+
+        onView(withId(R.id.weatherDateTime))
+                .check(matches(isDisplayed()))
+                .check(matches(not(withText(""))))
+                .check(matches(not(withText("Loading..."))));
+
+        onView(withId(R.id.weatherTemperature))
+                .check(matches(isDisplayed()))
+                .check(matches(not(withText("N/A"))))
+                .check(matches(not(withText("Error"))));
+
+        onView(withId(R.id.weatherCondition))
+                .check(matches(isDisplayed()))
+                .check(matches(not(withText("N/A"))))
+                .check(matches(not(withText("Error"))));
+
+        onView(withId(R.id.weatherHumidity))
+                .check(matches(isDisplayed()))
+                .check(matches(not(withText("N/A"))))
+                .check(matches(not(withText("Error"))));
+
+        // Scroll to wind condition if needed
+        try {
+            onView(withId(R.id.weatherWind))
+                    .perform(scrollTo())
+                    .check(matches(isDisplayed()))
+                    .check(matches(not(withText("N/A"))))
+                    .check(matches(not(withText("Error"))));
+        } catch (Exception e) {
+            // If scroll fails, just check if it exists
+            onView(withId(R.id.weatherWind))
+                    .check(matches(isDisplayed()))
+                    .check(matches(not(withText("N/A"))))
+                    .check(matches(not(withText("Error"))));
+        }
+
+        scenario.close();
+    }
 
 }
