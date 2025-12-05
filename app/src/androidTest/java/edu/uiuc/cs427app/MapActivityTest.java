@@ -248,7 +248,7 @@ public class MapActivityTest {
 
         // record first map
         // TODO
-git
+
         // close MapActivity for Chicago
         scenario1.close();
 
