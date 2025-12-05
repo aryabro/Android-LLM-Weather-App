@@ -79,6 +79,7 @@ public class MapActivityTest {
                 if (!(item instanceof Button)) {
                     return false;
                 }
+
                 Button button = (Button) item;
                 if (!"MAP".equals(button.getText().toString())) {
                     return false;
@@ -142,12 +143,11 @@ public class MapActivityTest {
             // this allows tests to run even if CityDao does not have delete method
         }
 
-        // prepare test data - Chicago and New York
+        // prepare test data - Chicago
         City chicago = new City("Chicago", 41.8781, -87.6298, "United States", "US", "USA", "Illinois", 1);
-        City newYork = new City("New York", 40.7128, -74.0060, "United States", "US", "USA", "New York", 2);
 
         // use insertAll to insert test data
-        cityDao.insertAll(Arrays.asList(chicago, newYork));
+        cityDao.insertAll(Arrays.asList(chicago));
 
         // initialize Espresso Intents (ensure initialized before each test)
         try {
@@ -228,6 +228,16 @@ public class MapActivityTest {
                 hasExtra("username", "testUser")));
     }
 
+    /**
+     * #### MOCKING TEST ####
+     * In our implementation, MainActiviy passes the coordinates of the city to MapActivity in an
+     * intent. To test MapActiviy without this dependency on MainActiviy, we use mocking.
+     *
+     * For this, MapActivity is seeded with a location and started directly. We can then check if
+     * the displayed map displays the seeded location.
+     *
+     * In the test below, the map is first seeded with Chicago and then Champaign.
+     */
     @Test
     public void test_2_MapActivityDisplaysFreshData() {
         // First launch MapActivity for Chicago - pass username, city, lat, long
@@ -246,9 +256,6 @@ public class MapActivityTest {
             e.printStackTrace();
         }
 
-        // record first map
-        // TODO
-
         // close MapActivity for Chicago
         scenario1.close();
 
@@ -262,9 +269,9 @@ public class MapActivityTest {
         // Second launch MapActivity for Champaign
         Intent intent2 = new Intent(ApplicationProvider.getApplicationContext(), MapActivity.class);
         intent2.putExtra("username", "testUser");
-        intent2.putExtra("city", "New York");
-        intent2.putExtra("lat", 40.7128);
-        intent2.putExtra("lng", -74.0060);
+        intent2.putExtra("city", "Champaign");
+        intent2.putExtra("lat", 40.1163);
+        intent2.putExtra("lng", -88.2435);
 
         ActivityScenario<MapActivity> scenario2 = ActivityScenario.launch(intent2);
 
