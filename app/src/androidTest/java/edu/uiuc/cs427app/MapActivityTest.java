@@ -35,7 +35,11 @@ import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra;
-
+import static androidx.test.espresso.web.sugar.Web.onWebView;
+import static androidx.test.espresso.web.model.Atoms.getCurrentUrl;
+import static androidx.test.espresso.web.webdriver.DriverAtoms.*;
+import static androidx.test.espresso.web.assertion.WebViewAssertions.*;
+import static org.hamcrest.CoreMatchers.containsString;
 
 import android.widget.Button;
 import android.view.View;
@@ -226,6 +230,19 @@ public class MapActivityTest {
                 hasExtra("lat", 41.8781),
                 hasExtra("lng", -87.6298),
                 hasExtra("username", "testUser")));
+
+        // assert: Verify information for Chicago is displayed
+        onView(withId(R.id.map_city_name))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Chicago")));
+
+        onView(withId(R.id.map_coordinates))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Latitude: 41.8781, Longitude: -87.6298")));
+
+        // assert: Verify that URL for the map webview includes the correct coordinates
+        onWebView()
+                .check(webMatches(getCurrentUrl(), containsString("q=41.8781,-87.6298")));
     }
 
     /**
@@ -249,12 +266,33 @@ public class MapActivityTest {
 
         ActivityScenario<MapActivity> scenario1 = ActivityScenario.launch(intent1);
 
+        // Assert: Verify MapActivity is started correctly for Chicago
+        intended(hasComponent(MapActivity.class.getName()));
+        intended(allOf(
+                hasExtra("username", "testUser"),
+                hasExtra("city", "Chicago"),
+                hasExtra("lat", 41.8781),
+                hasExtra("lng", -87.6298)));
+
         // wait for map to load
         try {
             Thread.sleep(7500); // wait for 7.5 seconds to ensure the map is fully loaded
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        // assert: Verify information for Chicago is displayed
+        onView(withId(R.id.map_city_name))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Chicago")));
+
+        onView(withId(R.id.map_coordinates))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Latitude: 41.8781, Longitude: -87.6298")));
+
+        // assert: Verify that URL for the map webview includes the correct coordinates
+        onWebView()
+                .check(webMatches(getCurrentUrl(), containsString("q=41.8781,-87.6298")));
 
         // close MapActivity for Chicago
         scenario1.close();
@@ -266,6 +304,9 @@ public class MapActivityTest {
             e.printStackTrace();
         }
 
+        Intents.release();
+        Intents.init();
+
         // Second launch MapActivity for Champaign
         Intent intent2 = new Intent(ApplicationProvider.getApplicationContext(), MapActivity.class);
         intent2.putExtra("username", "testUser");
@@ -275,6 +316,14 @@ public class MapActivityTest {
 
         ActivityScenario<MapActivity> scenario2 = ActivityScenario.launch(intent2);
 
+        // Assert: Verify MapActivity is started correctly for Champaign
+        intended(hasComponent(MapActivity.class.getName()));
+        intended(allOf(
+                hasExtra("username", "testUser"),
+                hasExtra("city", "Champaign"),
+                hasExtra("lat", 40.1163),
+                hasExtra("lng", -88.2435)));
+
         // wait for map to load
         try {
             Thread.sleep(7500);
@@ -282,7 +331,20 @@ public class MapActivityTest {
             e.printStackTrace();
         }
 
-        // close MapActivity for New York
+        // assert: Verify information for Champaign is displayed
+        onView(withId(R.id.map_city_name))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Champaign")));
+
+        onView(withId(R.id.map_coordinates))
+                .check(matches(isDisplayed()))
+                .check(matches(withText("Latitude: 40.1163, Longitude: -88.2435")));
+
+        // assert: Verify that URL for the map webview includes the correct coordinates
+        onWebView()
+                .check(webMatches(getCurrentUrl(), containsString("q=40.1163,-88.2435")));
+
+        // close MapActivity for Champaign
         scenario2.close();
     }
 }
