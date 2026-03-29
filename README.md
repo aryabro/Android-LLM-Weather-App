@@ -1,4 +1,4 @@
-# Android Weather App with AI Integration
+# AtmoSense: Real-Time Weather & AI Insights
 
 ## Overview
 
